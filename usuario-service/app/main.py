@@ -1,0 +1,47 @@
+from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.controller.usuario_controller import router as usuario_router
+from app.core.config import settings
+from app.core.database import Base, SessionLocal, engine
+from app.core.security import gerar_hash_senha
+from app.model.usuario import Usuario
+from app.repository.usuario_repository import UsuarioRepository
+
+Base.metadata.create_all(bind=engine)
+
+def criar_admin_inicial():
+    db = SessionLocal()
+    try:
+        repo = UsuarioRepository(db)
+        if not repo.buscar_por_email(settings.ADMIN_EMAIL):
+            repo.salvar(Usuario(
+                nome="Administrador",
+                email=settings.ADMIN_EMAIL,
+                senha_hash=gerar_hash_senha(settings.ADMIN_SENHA),
+                tipo="ADMIN",
+            ))
+            print(f"ADMIN inicial criado: {settings.ADMIN_EMAIL}")
+    finally:
+        db.close()
+
+criar_admin_inicial()
+
+app = FastAPI(title="Serviço de Usuário", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.exception_handler(RequestValidationError)
+async def erro_validacao(request: Request, exc: RequestValidationError):
+    return JSONResponse(status_code=400, content={"detail": jsonable_encoder(exc.errors())})
+
+
+app.include_router(usuario_router)
