@@ -1,0 +1,32 @@
+services:
+  postgres-usuario:
+    container_name: postgres-usuario
+    image: postgres:16
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: usuario_db
+    volumes:
+      - usuario-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d usuario_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  usuario-service:
+    container_name: usuario-service
+    build: ./usuario-service
+    ports:
+      - "8001:8001"
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres-usuario:5432/usuario_db
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_SENHA: ${ADMIN_SENHA}
+    depends_on:
+      postgres-usuario:
+        condition: service_healthy
+volumes:
+  usuario-data:
