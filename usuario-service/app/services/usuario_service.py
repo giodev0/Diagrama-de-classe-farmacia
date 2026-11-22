@@ -62,7 +62,7 @@ class UsuarioService:
         if usuario_logado["id"] == id:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Você não pode excluir a própria conta")
         
-        usuario = self.repo.buscar_por_id(id)
+        usuario = self.buscar_usuario(id)
         if usuario.tipo == "ADMIN" and self.repo.contar_admins_ativos() <= 1:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Não é possível excluir o último administrador")
         
