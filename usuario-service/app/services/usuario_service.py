@@ -1,9 +1,9 @@
 from fastapi import HTTPException, status
 
 from app.core.security import criar_token, gerar_hash_senha, verificar_senha
-from app.model.usuario import Usuario
-from app.repository.usuario_repository import UsuarioRepository
-from app.schema.usuario_schema import LoginRequest, TokenResponse, UsuarioCreate, UsuarioUpdate
+from app.models.usuario import Usuario
+from app.repositories.usuario_repository import UsuarioRepository
+from app.schemas.usuario_schema import LoginRequest, TokenResponse, UsuarioCreate, UsuarioUpdate
 
 class UsuarioService:
     def __init__(self, repo: UsuarioRepository):

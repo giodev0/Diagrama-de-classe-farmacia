@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import exigir_admin, get_usuario_atual
-from app.repository.usuario_repository import UsuarioRepository
-from app.schema.usuario_schema import (
+from app.repositories.usuario_repository import UsuarioRepository
+from app.schemas.usuario_schema import (
     LoginRequest, TokenResponse, UsuarioCreate, UsuarioResponse, UsuarioUpdate,
 )
 from app.service.usuario_service import UsuarioService

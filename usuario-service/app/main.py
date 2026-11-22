@@ -4,12 +4,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.controller.usuario_controller import router as usuario_router
+from app.controllers.usuario_controller import router as usuario_router
 from app.core.config import settings
 from app.core.database import Base, SessionLocal, engine
 from app.core.security import gerar_hash_senha
-from app.model.usuario import Usuario
-from app.repository.usuario_repository import UsuarioRepository
+from app.models.usuario import Usuario
+from app.repositories.usuario_repository import UsuarioRepository
 
 Base.metadata.create_all(bind=engine)
 
