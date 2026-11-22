@@ -18,10 +18,8 @@ app.use(
   pagamentoRoutes
 );
 
-const PORT = 3005;
+const PORT = process.env.PORT || 3005;
 
 app.listen(PORT, () => {
-  console.log(
-    `Pagamento Service rodando na porta ${PORT}`
-  );
+  console.log(`Pagamento Service rodando na porta ${PORT}`);
 });

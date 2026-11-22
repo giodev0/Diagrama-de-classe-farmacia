@@ -28,5 +28,14 @@ services:
     depends_on:
       postgres-usuario:
         condition: service_healthy
+  pagamento-service:
+    build:
+      context: ./pagamento-service
+    container_name: pagamento-service
+    ports:
+      - "3005:3005"
+    volumes:
+      - pagamento-data:/app/database
 volumes:
   usuario-data:
+  pagamento-data:
