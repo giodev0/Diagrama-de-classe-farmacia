@@ -139,11 +139,32 @@ mvn spring-boot:run
 Variáveis de ambiente: `DATABASE_URL`, `DATABASE_USER`, `DATABASE_PASSWORD`,
 `PRODUTO_SERVICE_URL`, `PRODUTO_SERVICE_TIMEOUT`, `SERVER_PORT`.
 
-Testes:
+## Testes
 
 ```bash
 mvn test
 ```
+
+**34 testes em JUnit 5**, do domínio puro até o fluxo HTTP completo:
+
+| Classe | Tipo | O que cobre |
+|---|---|---|
+| `EstoqueTest` | unitário de domínio | adicionar, retirar, saldo insuficiente, estoque baixo |
+| `MovimentacaoEstoqueTest` | unitário de domínio | histórico registra o saldo resultante certo |
+| `EstoqueServiceImplTest` | unitário com Mockito | regras do caso de uso, sem banco e sem HTTP |
+| `ProdutoHttpClientTest` | `MockRestServiceServer` | o lado **consumidor**: 200, 404, 500 e queda do produto-service |
+| `EstoqueRepositoryTest` | `@DataJpaTest` + H2 | a JPQL de estoque baixo, que compara duas colunas |
+| `EstoqueControllerIntegracaoTest` | `@SpringBootTest` + H2 | fluxo HTTP completo |
+| `ContratoDeErrosTest` | `@SpringBootTest` + H2 | 400/404/405 nos caminhos de erro |
+
+Nenhum teste precisa do `produto-service` no ar. Nos testes de service e de
+controller o `ProdutoClient` é substituído por uma implementação falsa de uma
+linha, e no `ProdutoHttpClientTest` um servidor HTTP simulado responde no
+lugar dele — inclusive simulando o serviço fora do ar, pra garantir que isso
+vira `503` e não `500`.
+
+> Em JDK 24 o Mockito imprime um aviso de *self-attach* ao rodar os testes.
+> É só aviso, não falha nada, e não aparece no build do Docker, que usa JDK 21.
 
 ## Organização do código (SOLID e GRASP)
 
@@ -152,6 +173,7 @@ controller/  -> entrada HTTP
 service/     -> interface do caso de uso + implementação
 repository/  -> abstração de persistência
 client/      -> porta de saída para o produto-service
+config/      -> timeout das chamadas HTTP externas
 domain/      -> Estoque, MovimentacaoEstoque e suas regras
 dto/         -> contrato de entrada e saída da API
 mapper/      -> conversão entidade <-> DTO

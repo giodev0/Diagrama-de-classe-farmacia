@@ -125,11 +125,25 @@ Localmente (precisa de um PostgreSQL em `localhost:5435` com o banco `produto_db
 mvn spring-boot:run
 ```
 
-Testes:
+## Testes
 
 ```bash
 mvn test
 ```
+
+**25 testes em JUnit 5**, do domínio puro até o fluxo HTTP completo:
+
+| Classe | Tipo | O que cobre |
+|---|---|---|
+| `ProdutoTest` | unitário de domínio | regras da entidade: preço > 0, inativação, atualização |
+| `ProdutoServiceImplTest` | unitário com Mockito | regras do caso de uso com repositório simulado |
+| `ProdutoRepositoryTest` | `@DataJpaTest` + H2 | as consultas derivadas, que só falham em runtime |
+| `ProdutoControllerIntegracaoTest` | `@SpringBootTest` + H2 | fluxo HTTP completo e contrato JSON |
+| `ContratoDeErrosTest` | `@SpringBootTest` + H2 | 400/404/405/415 nos caminhos de erro |
+
+O `ProdutoServiceImplTest` roda **sem banco e sem subir o Spring** — isso só é
+possível porque o service depende da interface `ProdutoRepository`, e não do
+JPA direto. É a Inversão de Dependência pagando na prática.
 
 ## Organização do código (SOLID e GRASP)
 
