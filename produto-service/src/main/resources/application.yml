@@ -1,0 +1,21 @@
+server:
+  port: ${SERVER_PORT:8002}
+
+spring:
+  application:
+    name: produto-service
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5435/produto_db}
+    username: ${DATABASE_USER:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    br.edu.unifor.farmacia.produto: INFO
