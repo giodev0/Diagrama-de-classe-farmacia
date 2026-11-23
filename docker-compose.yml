@@ -36,6 +36,73 @@ services:
       - "3005:3005"
     volumes:
       - pagamento-data:/app/database
+  postgres-produto:
+    container_name: postgres-produto
+    image: postgres:16
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: produto_db
+    volumes:
+      - produto-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d produto_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  produto-service:
+    container_name: produto-service
+    build: ./produto-service
+    ports:
+      - "8002:8002"
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres-produto:5432/produto_db
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+    depends_on:
+      postgres-produto:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8002/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+  postgres-estoque:
+    container_name: postgres-estoque
+    image: postgres:16
+    ports:
+      - "5436:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: estoque_db
+    volumes:
+      - estoque-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d estoque_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  estoque-service:
+    container_name: estoque-service
+    build: ./estoque-service
+    ports:
+      - "8003:8003"
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres-estoque:5432/estoque_db
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      PRODUTO_SERVICE_URL: http://produto-service:8002
+    depends_on:
+      postgres-estoque:
+        condition: service_healthy
+      produto-service:
+        condition: service_healthy
 volumes:
   usuario-data:
   pagamento-data:
+  produto-data:
+  estoque-data:
