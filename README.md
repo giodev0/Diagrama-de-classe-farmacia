@@ -44,6 +44,7 @@ e nunca `venda-service -> BD Produtos`.
 ## Como rodar
 
 ```bash
+cp .env.example .env    # necessário na primeira vez
 docker compose up --build
 ```
 
@@ -57,7 +58,8 @@ docker compose up --build
 Para subir só uma parte: `docker compose up --build produto-service estoque-service`.
 
 O `usuario-service` espera as variáveis `JWT_SECRET`, `ADMIN_EMAIL` e
-`ADMIN_SENHA` em um arquivo `.env` na raiz.
+`ADMIN_SENHA` em um arquivo `.env` na raiz — use o [`.env.example`](.env.example)
+como modelo. O `.env` em si não vai para o git.
 
 ## Documentação de cada serviço
 
