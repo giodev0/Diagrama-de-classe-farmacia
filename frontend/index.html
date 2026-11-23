@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Farmácia</title>
+  <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+
+  <!-- ===================== TELA DE LOGIN ===================== -->
+  <div id="tela-login" class="tela-login">
+    <form id="form-login" class="cartao-login">
+      <h1>💊 Sistema de Farmácia</h1>
+      <p class="subtitulo">Entre com sua conta de funcionário</p>
+
+      <label for="login-email">E-mail</label>
+      <input type="email" id="login-email" required autocomplete="username">
+
+      <label for="login-senha">Senha</label>
+      <input type="password" id="login-senha" required autocomplete="current-password">
+
+      <button type="submit" class="botao-primario">Entrar</button>
+      <p id="login-erro" class="erro-login" hidden></p>
+    </form>
+  </div>
+
+  <!-- ===================== APLICAÇÃO ===================== -->
+  <div id="app" hidden>
+    <header class="cabecalho">
+      <span class="marca">💊 Sistema de Farmácia</span>
+      <div class="usuario">
+        <span id="usuario-logado"></span>
+        <button id="botao-sair" class="botao-texto">Sair</button>
+      </div>
+    </header>
+
+    <nav class="abas">
+      <button class="aba ativa" data-secao="produtos">Produtos</button>
+      <button class="aba" data-secao="estoque">Estoque</button>
+      <button class="aba" data-secao="vendas">Vendas</button>
+      <button class="aba" data-secao="pagamentos">Pagamentos</button>
+      <button class="aba" data-secao="relatorios">Relatórios</button>
+    </nav>
+
+    <div id="avisos" class="avisos" aria-live="polite"></div>
+
+    <main>
+
+      <!-- -------------------- PRODUTOS -------------------- -->
+      <section id="secao-produtos" class="secao ativa">
+        <div class="cabecalho-secao">
+          <h2>Produtos</h2>
+          <button id="novo-produto" class="botao-primario">Novo produto</button>
+        </div>
+
+        <form id="filtro-produtos" class="barra-filtro">
+          <input type="search" id="filtro-nome" placeholder="Buscar por nome">
+          <select id="filtro-tipo">
+            <option value="">Todos os tipos</option>
+            <option value="MEDICAMENTO">Medicamento</option>
+            <option value="GENERICO">Genérico</option>
+            <option value="COSMETICO">Cosmético</option>
+            <option value="HIGIENE_PESSOAL">Higiene pessoal</option>
+            <option value="SUPLEMENTO">Suplemento</option>
+            <option value="OUTRO">Outro</option>
+          </select>
+          <button type="submit" class="botao-secundario">Filtrar</button>
+          <button type="button" id="limpar-filtro" class="botao-texto">Limpar</button>
+        </form>
+
+        <div class="tabela-rolavel">
+          <table id="tabela-produtos">
+            <thead>
+              <tr>
+                <th>ID</th><th>Nome</th><th>Tipo</th><th>Preço</th>
+                <th>Código de barras</th><th class="acoes">Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- -------------------- ESTOQUE -------------------- -->
+      <section id="secao-estoque" class="secao">
+        <div class="cabecalho-secao">
+          <h2>Estoque</h2>
+          <button id="novo-estoque" class="botao-primario">Cadastrar estoque</button>
+        </div>
+
+        <label class="caixa-selecao">
+          <input type="checkbox" id="apenas-baixos">
+          Mostrar apenas estoque baixo
+        </label>
+
+        <div class="tabela-rolavel">
+          <table id="tabela-estoque">
+            <thead>
+              <tr>
+                <th>Produto</th><th>Quantidade</th><th>Mínimo</th>
+                <th>Situação</th><th class="acoes">Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- -------------------- VENDAS -------------------- -->
+      <section id="secao-vendas" class="secao">
+        <h2>Vendas</h2>
+        <div class="pendente">
+          <h3>Aguardando o <code>venda-service</code></h3>
+          <p>
+            Esta tela é ligada assim que o serviço de Vendas (Python, responsável
+            Guilherme) estiver no ar. O frontend já está preparado: basta
+            descomentar o bloco <code>/api/vendas</code> no
+            <code>frontend/nginx.conf</code> e adicionar o serviço ao
+            <code>docker-compose.yml</code>.
+          </p>
+          <p>O fluxo que esta tela vai disparar, conforme combinado pela equipe:</p>
+          <ol>
+            <li>Vendas consulta <code>GET /produtos/{id}</code> para obter preço</li>
+            <li>Vendas consulta <code>GET /estoques/{produtoId}/disponibilidade</code></li>
+            <li>Vendas calcula o total e aplica o desconto</li>
+            <li>Vendas chama <code>POST /pagamentos</code></li>
+            <li>Aprovado o pagamento, Vendas chama <code>POST /estoques/{produtoId}/saida</code></li>
+          </ol>
+          <p class="nota">
+            A baixa no estoque só acontece depois do pagamento aprovado — por
+            isso o frontend não chama o estoque diretamente numa venda.
+          </p>
+        </div>
+      </section>
+
+      <!-- -------------------- PAGAMENTOS -------------------- -->
+      <section id="secao-pagamentos" class="secao">
+        <div class="cabecalho-secao">
+          <h2>Pagamentos</h2>
+          <button id="novo-pagamento" class="botao-primario">Processar pagamento</button>
+        </div>
+
+        <div class="tabela-rolavel">
+          <table id="tabela-pagamentos">
+            <thead>
+              <tr>
+                <th>ID</th><th>Venda</th><th>Valor</th>
+                <th>Forma</th><th>Status</th><th>Data</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- -------------------- RELATÓRIOS -------------------- -->
+      <section id="secao-relatorios" class="secao">
+        <h2>Relatórios</h2>
+        <div class="pendente">
+          <h3>Aguardando o <code>relatorio-service</code></h3>
+          <p>
+            Tela ligada assim que o serviço de Relatórios (JavaScript,
+            responsável Sophia) estiver no ar, em
+            <code>/api/relatorios</code>.
+          </p>
+          <p>Relatórios previstos: vendas, produtos e estoque.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ===================== MODAL GENÉRICO ===================== -->
+  <div id="modal" class="fundo-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+      <h3 id="modal-titulo"></h3>
+      <form id="modal-form"></form>
+      <div class="acoes-modal">
+        <button type="button" id="modal-cancelar" class="botao-texto">Cancelar</button>
+        <button type="submit" form="modal-form" class="botao-primario">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/produtos.js"></script>
+  <script src="js/estoque.js"></script>
+  <script src="js/pagamentos.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -48,8 +48,11 @@ cp .env.example .env    # necessário na primeira vez
 docker compose up --build
 ```
 
+Depois acesse a interface em **http://localhost:8080**.
+
 | Serviço             | URL local               | Banco                    |
 |---------------------|-------------------------|--------------------------|
+| `frontend`          | http://localhost:8080   | —                        |
 | `usuario-service`   | http://localhost:8001   | Postgres `localhost:5434`|
 | `produto-service`   | http://localhost:8002   | Postgres `localhost:5435`|
 | `estoque-service`   | http://localhost:8003   | Postgres `localhost:5436`|
@@ -65,6 +68,19 @@ como modelo. O `.env` em si não vai para o git.
 
 - [`produto-service/README.md`](produto-service/README.md) — endpoints e contratos de Produtos
 - [`estoque-service/README.md`](estoque-service/README.md) — endpoints e contratos de Estoque
+- [`frontend/README.md`](frontend/README.md) — interface web e o proxy para os serviços
+
+## Frontend
+
+Interface web simples em HTML, CSS e JavaScript puros, servida por nginx, que
+também funciona como proxy reverso: o navegador fala só com
+`localhost:8080` e o nginx encaminha cada caminho `/api/...` para o serviço
+dono do dado. Assim não há CORS e o frontend não precisa conhecer a porta de
+nenhum serviço.
+
+As telas de **Produtos**, **Estoque** e **Pagamentos** estão funcionando. As
+de **Vendas** e **Relatórios** mostram o que falta e são ligadas assim que os
+serviços correspondentes existirem.
 
 ## Diagrama de classes
 
