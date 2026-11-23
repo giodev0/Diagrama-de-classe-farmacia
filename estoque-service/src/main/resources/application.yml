@@ -1,0 +1,26 @@
+server:
+  port: ${SERVER_PORT:8003}
+
+spring:
+  application:
+    name: estoque-service
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5436/estoque_db}
+    username: ${DATABASE_USER:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+servicos:
+  produto:
+    url: ${PRODUTO_SERVICE_URL:http://localhost:8002}
+    timeout-segundos: ${PRODUTO_SERVICE_TIMEOUT:5}
+
+logging:
+  level:
+    br.edu.unifor.farmacia.estoque: INFO
