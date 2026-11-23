@@ -7,7 +7,7 @@ from app.repositories.usuario_repository import UsuarioRepository
 from app.schemas.usuario_schema import (
     LoginRequest, TokenResponse, UsuarioCreate, UsuarioResponse, UsuarioUpdate,
 )
-from app.service.usuario_service import UsuarioService
+from app.services.usuario_service import UsuarioService
 
 router = APIRouter(tags=["Usuários"])
 
