@@ -16,6 +16,14 @@
 
 * { box-sizing: border-box; }
 
+/*
+  O atributo hidden do HTML funciona porque o navegador aplica display: none,
+  mas qualquer regra nossa que defina display ganha dele. Como .tela-login e
+  .fundo-modal usam display: flex, sem esta regra o modal apareceria por cima
+  de tudo desde o carregamento e a tela de login nunca sumiria apos entrar.
+*/
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
