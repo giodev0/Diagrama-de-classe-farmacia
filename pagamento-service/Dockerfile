@@ -16,6 +16,6 @@ RUN npm rebuild sqlite3 --build-from-source
 
 COPY . .
 
-EXPOSE 3005
+EXPOSE 8005
 
-CMD ["node", "server.js"]
+CMD ["node", "app/main.js"]

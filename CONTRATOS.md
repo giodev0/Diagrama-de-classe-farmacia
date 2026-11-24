@@ -65,8 +65,8 @@ Em erro de validação, o corpo traz também `campos`:
 | `produto-service` | Giovana | Java | `8002` | MySQL `produto_db` |
 | `estoque-service` | Giovana | Java | `8003` | MySQL `estoque_db` |
 | `venda-service` | Guilherme | Python | `8004` | Postgres `venda_db` |
-| `pagamento-service` | Sophia | JavaScript | `3005` | SQLite |
-| `relatorio-service` | Sophia | JavaScript | `3006` | SQLite `relatorio_db` |
+| `pagamento-service` | Sophia | JavaScript | `8005` | SQLite |
+| `relatorio-service` | Sophia | JavaScript | `8006` | SQLite `relatorio_db` |
 | `frontend` | — | nginx | `8080` | — |
 
 Pelo frontend tudo passa por `/api/<serviço>`, e o nginx encaminha.
@@ -163,7 +163,7 @@ Demais rotas exigem `Authorization: Bearer <token>`.
 
 Sem saldo, responde `400` e **não altera nada**.
 
-## pagamento-service — `3005`
+## pagamento-service — `8005`
 
 | Método | Rota | Descrição |
 |---|---|---|

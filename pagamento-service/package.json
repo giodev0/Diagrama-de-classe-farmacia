@@ -1,12 +1,17 @@
 {
   "name": "pagamento-service",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Microsserviço de pagamentos do sistema de farmácia",
+  "main": "app/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app/main.js",
+    "dev": "node app/main.js"
   },
-  "keywords": [],
+  "keywords": [
+    "pagamentos",
+    "microservices",
+    "farmacia"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
