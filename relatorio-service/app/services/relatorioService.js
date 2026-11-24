@@ -13,84 +13,131 @@ class RelatorioService {
     this.repository = repository;
   }
 
-  async sincronizar() {
-
+  async buscarDados(url, nomeServico) {
     try {
-      const [
-        respostaProdutos,
-        respostaEstoque,
-        respostaVendas
-      ] = await Promise.all([
-        axios.get(
-          `${config.produtoServiceUrl}/produtos`
-        ),
 
-        axios.get(
-          `${config.estoqueServiceUrl}/estoque`
-        ),
-
-        axios.get(
-          `${config.vendaServiceUrl}/vendas`
-        )
-      ]);
-
-      const produtos =
-        respostaProdutos.data;
-
-      const estoques =
-        respostaEstoque.data;
-
-      const vendas =
-        respostaVendas.data;
-
-      await this.sincronizarEstoque(
-        estoques
-      );
-
-      await this.sincronizarProdutos(
-        produtos,
-        vendas
-      );
-
-      await this.sincronizarVendas(
-        vendas
-      );
+      const resposta =
+        await axios.get(url);
 
       return {
-        sincronizadoEm:
-          new Date().toISOString(),
-
-        produtos:
-          produtos.length,
-
-        estoques:
-          estoques.length,
-
-        vendas:
-          vendas.length
+        disponivel: true,
+        dados: resposta.data
       };
 
     } catch (erro) {
 
       console.error(
-        "Erro durante sincronização:",
+        `${nomeServico} indisponível:`,
         erro.message
       );
 
-      if (
-        erro.code === "ECONNREFUSED"
-      ) {
-        throw {
-          status: 503,
-          mensagem:
-            "Um dos serviços necessários está indisponível"
-        };
+      return {
+        disponivel: false,
+        dados: []
+      };
+    }
+  }
+
+  async sincronizar() {
+
+    const [
+      resultadoProdutos,
+      resultadoEstoque,
+      resultadoVendas
+    ] = await Promise.all([
+
+      this.buscarDados(
+        `${config.produtoServiceUrl}/produtos`,
+        "produto-service"
+      ),
+
+      this.buscarDados(
+        `${config.estoqueServiceUrl}/estoque`,
+        "estoque-service"
+      ),
+
+      this.buscarDados(
+        `${config.vendaServiceUrl}/vendas`,
+        "venda-service"
+      )
+    ]);
+
+    try {
+
+      if (resultadoEstoque.disponivel) {
+        await this.sincronizarEstoque(
+          resultadoEstoque.dados
+        );
       }
+
+      if (resultadoProdutos.disponivel) {
+
+        if (resultadoVendas.disponivel) {
+
+          await this.sincronizarProdutos(
+            resultadoProdutos.dados,
+            resultadoVendas.dados
+          );
+
+        } else {
+
+          await this.sincronizarProdutosSemVendas(
+            resultadoProdutos.dados
+          );
+        }
+      }
+
+      if (resultadoVendas.disponivel) {
+
+        await this.sincronizarVendas(
+          resultadoVendas.dados
+        );
+      }
+
+      return {
+        sincronizadoEm:
+          new Date().toISOString(),
+
+        servicos: {
+          produtos:
+            resultadoProdutos.disponivel,
+
+          estoque:
+            resultadoEstoque.disponivel,
+
+          vendas:
+            resultadoVendas.disponivel
+        },
+
+        registros: {
+          produtos:
+            resultadoProdutos.disponivel
+              ? resultadoProdutos.dados.length
+              : 0,
+
+          estoque:
+            resultadoEstoque.disponivel
+              ? resultadoEstoque.dados.length
+              : 0,
+
+          vendas:
+            resultadoVendas.disponivel
+              ? resultadoVendas.dados.length
+              : 0
+        }
+      };
+
+    } catch (erro) {
+
+      console.error(
+        "Erro ao salvar dados dos relatórios:",
+        erro
+      );
 
       throw {
         status: 500,
         mensagem:
-          "Erro ao sincronizar relatórios"
+          "Erro ao salvar dados dos relatórios"
       };
     }
   }
@@ -109,6 +156,23 @@ class RelatorioService {
         estoqueMinimo:
           estoque.estoqueMinimo
       });
+    }
+  }
+
+  async sincronizarProdutosSemVendas(
+    produtos
+  ) {
+
+    for (const produto of produtos) {
+
+      await this.repository
+        .salvarProdutoSemVendas({
+          produtoId:
+            produto.id,
+
+          nome:
+            produto.nome
+        });
     }
   }
 
@@ -136,11 +200,11 @@ class RelatorioService {
         for (const item of itens) {
 
           if (
-            item.produtoId ===
-            produto.id
+            Number(item.produtoId) ===
+            Number(produto.id)
           ) {
             quantidadeVendida +=
-              item.quantidade;
+              Number(item.quantidade);
           }
         }
       }
@@ -186,7 +250,8 @@ class RelatorioService {
 
     try {
 
-      return await this.repository.listarVendas();
+      return await this.repository
+        .listarVendas();
 
     } catch (erro) {
 
@@ -207,7 +272,8 @@ class RelatorioService {
 
     try {
 
-      return await this.repository.listarProdutos();
+      return await this.repository
+        .listarProdutos();
 
     } catch (erro) {
 
@@ -228,7 +294,8 @@ class RelatorioService {
 
     try {
 
-      return await this.repository.listarEstoque();
+      return await this.repository
+        .listarEstoque();
 
     } catch (erro) {
 

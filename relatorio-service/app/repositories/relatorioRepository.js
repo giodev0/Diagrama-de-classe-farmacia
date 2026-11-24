@@ -58,6 +58,32 @@ class RelatorioRepository {
     });
   }
 
+  salvarProdutoSemVendas(produto) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        `
+        INSERT INTO produtos_relatorio
+        (produtoId, nome, quantidadeVendida)
+        VALUES (?, ?, 0)
+        ON CONFLICT(produtoId)
+        DO UPDATE SET
+          nome = excluded.nome
+        `,
+        [
+          produto.produtoId,
+          produto.nome
+        ],
+        (erro) => {
+          if (erro) {
+            return reject(erro);
+          }
+
+          resolve();
+        }
+      );
+    });
+  }
+
   salvarEstoque(estoque) {
     return new Promise((resolve, reject) => {
       db.run(
