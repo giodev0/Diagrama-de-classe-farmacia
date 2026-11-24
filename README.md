@@ -97,6 +97,7 @@ comunicação continua na `3306`.
 
 - [`produto-service/README.md`](produto-service/README.md) — endpoints e contratos de Produtos
 - [`estoque-service/README.md`](estoque-service/README.md) — endpoints e contratos de Estoque
+- [`CONTRATOS.md`](CONTRATOS.md) — **contratos de todas as APIs**, incluindo a proposta de Vendas e Relatórios
 - [`frontend/README.md`](frontend/README.md) — interface web e o proxy para os serviços
 
 ## Frontend
@@ -107,9 +108,11 @@ também funciona como proxy reverso: o navegador fala só com
 dono do dado. Assim não há CORS e o frontend não precisa conhecer a porta de
 nenhum serviço.
 
-As telas de **Produtos**, **Estoque** e **Pagamentos** estão funcionando. As
-de **Vendas** e **Relatórios** mostram o que falta e são ligadas assim que os
-serviços correspondentes existirem.
+**Todas as seis telas estão implementadas**: login, produtos, estoque, vendas,
+pagamentos e relatórios. As de Vendas e Relatórios foram escritas contra o
+contrato de [`CONTRATOS.md`](CONTRATOS.md); enquanto os serviços não existem,
+elas mostram um aviso em vez de quebrar. Ligá-las depois é trocar dois blocos
+no `nginx.conf` — nenhuma linha de JavaScript muda.
 
 ## Diagrama de classes
 

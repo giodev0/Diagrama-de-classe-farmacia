@@ -346,6 +346,85 @@ td.acoes, th.acoes { text-align: right; }
   margin-top: 1.5rem;
 }
 
+/* ---------------- Venda e relatórios ---------------- */
+
+.painel {
+  background: var(--branco);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.painel h3 { margin-top: 0; }
+.painel h4 { margin: 1.5rem 0 .5rem; color: var(--verde-escuro); }
+
+.rodape-venda {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.rodape-venda label { margin: 0 0 .3rem; }
+.rodape-venda input { width: 90px; }
+.rodape-venda .botao-primario { margin-left: auto; }
+
+.resumo-venda {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  font-size: .9rem;
+  min-width: 190px;
+}
+
+.resumo-venda > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.resumo-venda .destaque {
+  border-top: 1px solid var(--borda);
+  padding-top: .25rem;
+  font-size: 1.05rem;
+  color: var(--verde-escuro);
+}
+
+.rotulo-inline {
+  margin: 0;
+  align-self: center;
+}
+
+.indicadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: .75rem;
+  margin-bottom: 1.25rem;
+}
+
+.cartao-indicador {
+  background: var(--verde-claro);
+  border-radius: var(--raio);
+  padding: .8rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+}
+
+.cartao-indicador span {
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--verde-escuro);
+}
+
+.cartao-indicador strong {
+  font-size: 1.3rem;
+  color: var(--texto);
+}
+
 /* ---------------- Telas pendentes ---------------- */
 
 .pendente {

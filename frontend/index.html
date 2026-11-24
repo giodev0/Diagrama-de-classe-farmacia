@@ -110,27 +110,83 @@
       <!-- -------------------- VENDAS -------------------- -->
       <section id="secao-vendas" class="secao">
         <h2>Vendas</h2>
-        <div class="pendente">
-          <h3>Aguardando o <code>venda-service</code></h3>
+
+        <div id="vendas-indisponivel" class="pendente" hidden>
+          <h3>O <code>venda-service</code> ainda não está no ar</h3>
           <p>
-            Esta tela é ligada assim que o serviço de Vendas (Python, responsável
-            Guilherme) estiver no ar. O frontend já está preparado: basta
-            descomentar o bloco <code>/api/vendas</code> no
-            <code>frontend/nginx.conf</code> e adicionar o serviço ao
-            <code>docker-compose.yml</code>.
+            Esta tela já está implementada e segue o contrato definido em
+            <code>CONTRATOS.md</code>. Para ligá-la, troque o bloco
+            <code>/api/vendas</code> do <code>frontend/nginx.conf</code> pelo
+            <code>proxy_pass</code> comentado logo acima dele e descomente o
+            serviço no <code>docker-compose.yml</code>.
           </p>
-          <p>O fluxo que esta tela vai disparar, conforme combinado pela equipe:</p>
-          <ol>
-            <li>Vendas consulta <code>GET /produtos/{id}</code> para obter preço</li>
-            <li>Vendas consulta <code>GET /estoque/{produtoId}/disponibilidade</code></li>
-            <li>Vendas calcula o total e aplica o desconto</li>
-            <li>Vendas chama <code>POST /pagamentos</code></li>
-            <li>Aprovado o pagamento, Vendas chama <code>POST /estoque/{produtoId}/saida</code></li>
-          </ol>
           <p class="nota">
-            A baixa no estoque só acontece depois do pagamento aprovado — por
-            isso o frontend não chama o estoque diretamente numa venda.
+            Nenhuma linha de JavaScript precisa mudar.
           </p>
+        </div>
+
+        <div id="vendas-conteudo">
+          <div class="painel">
+            <h3>Nova venda</h3>
+            <div class="barra-filtro">
+              <button type="button" id="adicionar-item" class="botao-primario">Adicionar item</button>
+              <button type="button" id="limpar-venda" class="botao-texto">Limpar</button>
+            </div>
+
+            <div class="tabela-rolavel">
+              <table id="tabela-carrinho">
+                <thead>
+                  <tr>
+                    <th>Produto</th><th>Qtd.</th><th>Preço</th>
+                    <th>Subtotal</th><th class="acoes">Ações</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <div class="rodape-venda">
+              <label for="venda-desconto">Desconto (%)</label>
+              <input type="number" id="venda-desconto" min="0" max="100" step="1" value="0">
+
+              <div class="resumo-venda">
+                <div><span>Bruto</span><strong id="venda-bruto">R$ 0,00</strong></div>
+                <div><span>Desconto</span><strong id="venda-valor-desconto">- R$ 0,00</strong></div>
+                <div class="destaque"><span>Total</span><strong id="venda-total">R$ 0,00</strong></div>
+              </div>
+
+              <button type="button" id="finalizar-venda" class="botao-primario" disabled>
+                Criar venda
+              </button>
+            </div>
+            <p class="ajuda">
+              A venda nasce como rascunho. O estoque só é reduzido depois que o
+              pagamento for aprovado.
+            </p>
+          </div>
+
+          <div class="cabecalho-secao">
+            <h3>Vendas registradas</h3>
+            <select id="filtro-status-venda">
+              <option value="">Todas</option>
+              <option value="RASCUNHO">Em aberto</option>
+              <option value="FINALIZADA">Finalizadas</option>
+              <option value="PAGAMENTO_RECUSADO">Pagamento recusado</option>
+              <option value="CANCELADA">Canceladas</option>
+            </select>
+          </div>
+
+          <div class="tabela-rolavel">
+            <table id="tabela-vendas">
+              <thead>
+                <tr>
+                  <th>ID</th><th>Data</th><th>Itens</th>
+                  <th>Total</th><th>Situação</th><th class="acoes">Ações</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -157,14 +213,39 @@
       <!-- -------------------- RELATÓRIOS -------------------- -->
       <section id="secao-relatorios" class="secao">
         <h2>Relatórios</h2>
-        <div class="pendente">
-          <h3>Aguardando o <code>relatorio-service</code></h3>
+
+        <div id="relatorios-indisponivel" class="pendente" hidden>
+          <h3>O <code>relatorio-service</code> ainda não está no ar</h3>
           <p>
-            Tela ligada assim que o serviço de Relatórios (JavaScript,
-            responsável Sophia) estiver no ar, em
-            <code>/api/relatorios</code>.
+            Esta tela já está implementada e segue o contrato definido em
+            <code>CONTRATOS.md</code>. Para ligá-la, troque o bloco
+            <code>/api/relatorios</code> do <code>frontend/nginx.conf</code>
+            pelo <code>proxy_pass</code> comentado logo acima dele e descomente
+            o serviço no <code>docker-compose.yml</code>.
           </p>
-          <p>Relatórios previstos: vendas, produtos e estoque.</p>
+          <p class="nota">
+            Nenhuma linha de JavaScript precisa mudar.
+          </p>
+        </div>
+
+        <div id="relatorios-conteudo">
+          <div class="barra-filtro">
+            <button type="button" id="relatorio-vendas" class="botao-primario">Vendas</button>
+            <button type="button" id="relatorio-produtos" class="botao-secundario">Produtos</button>
+            <button type="button" id="relatorio-estoque" class="botao-secundario">Estoque</button>
+            <button type="button" id="sincronizar-relatorios" class="botao-texto">Sincronizar dados</button>
+          </div>
+
+          <div class="barra-filtro">
+            <label for="relatorio-inicio" class="rotulo-inline">De</label>
+            <input type="date" id="relatorio-inicio">
+            <label for="relatorio-fim" class="rotulo-inline">Até</label>
+            <input type="date" id="relatorio-fim">
+          </div>
+
+          <div id="relatorio-resultado" class="painel">
+            <p class="vazio">Escolha um relatório acima.</p>
+          </div>
         </div>
       </section>
 
@@ -189,6 +270,8 @@
   <script src="js/produtos.js"></script>
   <script src="js/estoque.js"></script>
   <script src="js/pagamentos.js"></script>
+  <script src="js/vendas.js"></script>
+  <script src="js/relatorios.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

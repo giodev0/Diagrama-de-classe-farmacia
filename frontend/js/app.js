@@ -7,7 +7,9 @@
   const CARREGADORES = {
     produtos: Produtos.carregar,
     estoque: Estoque.carregar,
+    vendas: Vendas.carregar,
     pagamentos: Pagamentos.carregar,
+    relatorios: Relatorios.carregar,
   };
 
   function trocarSecao(nome) {
@@ -38,7 +40,9 @@
     Auth.iniciar(mostrarApp);
     Produtos.iniciar();
     Estoque.iniciar();
+    Vendas.iniciar();
     Pagamentos.iniciar();
+    Relatorios.iniciar();
 
     document.querySelectorAll('.aba').forEach((aba) => {
       aba.addEventListener('click', () => trocarSecao(aba.dataset.secao));

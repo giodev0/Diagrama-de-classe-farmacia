@@ -12,6 +12,8 @@ const Api = (() => {
     produtos: '/api/produtos',
     estoques: '/api/estoque',
     pagamentos: '/api/pagamentos',
+    vendas: '/api/vendas',
+    relatorios: '/api/relatorios',
   };
 
   const CHAVE_TOKEN = 'farmacia.token';
@@ -165,5 +167,23 @@ const Api = (() => {
     // ---- pagamentos ----
     listarPagamentos: () => requisitar(CAMINHOS.pagamentos),
     processarPagamento: (dados) => requisitar(CAMINHOS.pagamentos, { metodo: 'POST', corpo: dados }),
+
+    // ---- vendas (venda-service) ----
+    listarVendas: (filtros) => requisitar(comParametros(CAMINHOS.vendas, filtros)),
+    buscarVenda: (id) => requisitar(`${CAMINHOS.vendas}/${id}`),
+    criarVenda: (dados) => requisitar(CAMINHOS.vendas, { metodo: 'POST', corpo: dados }),
+    pagarVenda: (id, formaPagamento) =>
+      requisitar(`${CAMINHOS.vendas}/${id}/pagamento`, {
+        metodo: 'POST', corpo: { formaPagamento },
+      }),
+    cancelarVenda: (id) => requisitar(`${CAMINHOS.vendas}/${id}/cancelar`, { metodo: 'POST' }),
+
+    // ---- relatorios (relatorio-service) ----
+    sincronizarRelatorios: () =>
+      requisitar(`${CAMINHOS.relatorios}/sincronizar`, { metodo: 'POST' }),
+    relatorioDeVendas: (periodo) =>
+      requisitar(comParametros(`${CAMINHOS.relatorios}/vendas`, periodo)),
+    relatorioDeProdutos: () => requisitar(`${CAMINHOS.relatorios}/produtos`),
+    relatorioDeEstoque: () => requisitar(`${CAMINHOS.relatorios}/estoque`),
   };
 })();
