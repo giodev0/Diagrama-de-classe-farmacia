@@ -60,9 +60,38 @@ Depois acesse a interface em **http://localhost:8080**.
 
 Para subir só uma parte: `docker compose up --build produto-service estoque-service`.
 
-O `usuario-service` espera as variáveis `JWT_SECRET`, `ADMIN_EMAIL` e
-`ADMIN_SENHA` em um arquivo `.env` na raiz — use o [`.env.example`](.env.example)
-como modelo. O `.env` em si não vai para o git.
+### Configuração (`.env`)
+
+O `docker compose` lê um arquivo `.env` na raiz e usa os valores para
+substituir os `${...}` do `docker-compose.yml`, que por sua vez injeta as
+variáveis dentro dos containers:
+
+```
+.env  →  docker compose substitui ${VAR}  →  environment:  →  container
+```
+
+Cada pessoa cria o seu com `cp .env.example .env`. **O `.env` é ignorado pelo
+git de propósito** — o que se compartilha é o [`.env.example`](.env.example),
+que é versionado.
+
+| Variável | Serviço | Padrão |
+|---|---|---|
+| `JWT_SECRET` | usuário | **obrigatória** |
+| `ADMIN_EMAIL` | usuário | **obrigatória** |
+| `ADMIN_SENHA` | usuário | **obrigatória** |
+| `MYSQL_ROOT_PASSWORD` | produtos, estoque | `root` |
+| `MYSQL_APP_USER` | produtos, estoque | `farmacia` |
+| `MYSQL_APP_PASSWORD` | produtos, estoque | `farmacia` |
+| `PRODUTO_DB_PORT` | produtos | `3307` |
+| `ESTOQUE_DB_PORT` | estoque | `3308` |
+
+As variáveis dos serviços em Java têm padrão, então sobem sem configuração
+nenhuma. As do `usuario-service` não têm: sem elas o serviço não inicia.
+
+Se alguma porta der conflito na sua máquina — é comum já existir um MySQL
+ocupando a `3306` — mude `PRODUTO_DB_PORT` ou `ESTOQUE_DB_PORT` no seu `.env`.
+Isso muda só a porta publicada no seu computador; entre os containers a
+comunicação continua na `3306`.
 
 ## Documentação de cada serviço
 

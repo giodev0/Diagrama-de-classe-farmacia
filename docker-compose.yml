@@ -42,12 +42,12 @@ services:
     # 3306 no host costuma estar ocupada por um MySQL instalado na maquina,
     # por isso cada banco publica em uma porta propria.
     ports:
-      - "3307:3306"
+      - "${PRODUTO_DB_PORT:-3307}:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: produto_db
-      MYSQL_USER: farmacia
-      MYSQL_PASSWORD: farmacia
+      MYSQL_USER: ${MYSQL_APP_USER:-farmacia}
+      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD:-farmacia}
     volumes:
       - produto-data:/var/lib/mysql
     healthcheck:
@@ -63,8 +63,8 @@ services:
       - "8002:8002"
     environment:
       DATABASE_URL: "jdbc:mysql://mysql-produto:3306/produto_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
-      DATABASE_USER: farmacia
-      DATABASE_PASSWORD: farmacia
+      DATABASE_USER: ${MYSQL_APP_USER:-farmacia}
+      DATABASE_PASSWORD: ${MYSQL_APP_PASSWORD:-farmacia}
     depends_on:
       mysql-produto:
         condition: service_healthy
@@ -78,12 +78,12 @@ services:
     container_name: mysql-estoque
     image: mysql:8.4
     ports:
-      - "3308:3306"
+      - "${ESTOQUE_DB_PORT:-3308}:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: estoque_db
-      MYSQL_USER: farmacia
-      MYSQL_PASSWORD: farmacia
+      MYSQL_USER: ${MYSQL_APP_USER:-farmacia}
+      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD:-farmacia}
     volumes:
       - estoque-data:/var/lib/mysql
     healthcheck:
@@ -99,8 +99,8 @@ services:
       - "8003:8003"
     environment:
       DATABASE_URL: "jdbc:mysql://mysql-estoque:3306/estoque_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
-      DATABASE_USER: farmacia
-      DATABASE_PASSWORD: farmacia
+      DATABASE_USER: ${MYSQL_APP_USER:-farmacia}
+      DATABASE_PASSWORD: ${MYSQL_APP_PASSWORD:-farmacia}
       PRODUTO_SERVICE_URL: http://produto-service:8002
     depends_on:
       mysql-estoque:
