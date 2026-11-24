@@ -122,7 +122,7 @@ docker compose up --build produto-service
 Localmente, apontando para o MySQL que o compose publica em `localhost:3307`:
 
 ```bash
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 Para usar um MySQL instalado direto na máquina (porta `3306`), crie o banco e
@@ -137,7 +137,7 @@ GRANT ALL PRIVILEGES ON produto_db.* TO 'farmacia'@'localhost';
 e aponte a aplicação para ele:
 
 ```bash
-mvn spring-boot:run -Dspring-boot.run.arguments=--spring.datasource.url=jdbc:mysql://localhost:3306/produto_db?useSSL=false^&allowPublicKeyRetrieval=true
+./mvnw spring-boot:run -Dspring-boot.run.arguments=--spring.datasource.url=jdbc:mysql://localhost:3306/produto_db?useSSL=false^&allowPublicKeyRetrieval=true
 ```
 
 As tabelas são criadas sozinhas pelo Hibernate (`ddl-auto: update`).
@@ -145,10 +145,10 @@ As tabelas são criadas sozinhas pelo Hibernate (`ddl-auto: update`).
 ## Testes
 
 ```bash
-mvn test
+./mvnw test
 ```
 
-**25 testes em JUnit 5**, do domínio puro até o fluxo HTTP completo:
+**25 testes em JUnit 5** (o `mvnw` dispensa instalar Maven), do domínio puro até o fluxo HTTP completo:
 
 | Classe | Tipo | O que cobre |
 |---|---|---|

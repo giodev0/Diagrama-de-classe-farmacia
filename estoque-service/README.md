@@ -133,7 +133,7 @@ Localmente, com o MySQL que o compose publica em `localhost:3308` e o
 `produto-service` rodando em `localhost:8002`:
 
 ```bash
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 Para usar um MySQL instalado direto na máquina (porta `3306`), crie o banco e
@@ -153,10 +153,10 @@ Variáveis de ambiente: `DATABASE_URL`, `DATABASE_USER`, `DATABASE_PASSWORD`,
 ## Testes
 
 ```bash
-mvn test
+./mvnw test
 ```
 
-**34 testes em JUnit 5**, do domínio puro até o fluxo HTTP completo:
+**34 testes em JUnit 5** (o `mvnw` dispensa instalar Maven), do domínio puro até o fluxo HTTP completo:
 
 | Classe | Tipo | O que cobre |
 |---|---|---|
