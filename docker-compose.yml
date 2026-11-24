@@ -33,12 +33,26 @@ services:
       context: ./pagamento-service
     container_name: pagamento-service
     ports:
-    - "8005:8005"
+      - "8005:8005"
     environment:
       PORT: 8005
       DATABASE_PATH: /app/database/pagamentos.db
     volumes:
-    - pagamento-data:/app/database
+      - pagamento-data:/app/database
+  relatorio-service:
+    build:
+      context: ./relatorio-service
+    container_name: relatorio-service
+    ports:
+      - "8006:8006"
+    environment:
+      PORT: 8006
+      PRODUTO_SERVICE_URL: http://produto-service:8002
+      ESTOQUE_SERVICE_URL: http://estoque-service:8003
+      VENDA_SERVICE_URL: http://venda-service:8004
+      DATABASE_PATH: /app/database/relatorios.db
+    volumes:
+      - relatorio-data:/app/database
   mysql-produto:
     container_name: mysql-produto
     image: mysql:8.4
@@ -123,5 +137,6 @@ services:
 volumes:
   usuario-data:
   pagamento-data:
+  relatorio-data:
   produto-data:
   estoque-data:

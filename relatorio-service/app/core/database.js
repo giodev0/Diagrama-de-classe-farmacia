@@ -2,11 +2,13 @@ const fs = require("fs");
 const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
 
-const databasePath = path.resolve(
-  process.cwd(),
-  "database",
-  "relatorios.db"
-);
+const databasePath =
+  process.env.DATABASE_PATH ||
+  path.resolve(
+    process.cwd(),
+    "database",
+    "relatorios.db"
+  );
 
 const pastaBanco = path.dirname(databasePath);
 
