@@ -55,7 +55,7 @@ class EstoqueControllerIntegracaoTest {
     @Test
     @DisplayName("cadastra estoque, movimenta entrada e saida e acusa estoque insuficiente")
     void fluxoCompletoDoEstoque() throws Exception {
-        mockMvc.perform(post("/estoques")
+        mockMvc.perform(post("/estoque")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"produtoId": 1, "quantidade": 10, "estoqueMinimo": 3}
@@ -65,12 +65,12 @@ class EstoqueControllerIntegracaoTest {
                 .andExpect(jsonPath("$.quantidade").value(10))
                 .andExpect(jsonPath("$.estoqueBaixo").value(false));
 
-        mockMvc.perform(get("/estoques/{produtoId}/disponibilidade", 1).param("quantidade", "4"))
+        mockMvc.perform(get("/estoque/{produtoId}/disponibilidade", 1).param("quantidade", "4"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.disponivel").value(true))
                 .andExpect(jsonPath("$.quantidadeDisponivel").value(10));
 
-        mockMvc.perform(post("/estoques/{produtoId}/saida", 1)
+        mockMvc.perform(post("/estoque/{produtoId}/saida", 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"quantidade": 8, "observacao": "Venda 1"}
@@ -79,7 +79,7 @@ class EstoqueControllerIntegracaoTest {
                 .andExpect(jsonPath("$.quantidade").value(2))
                 .andExpect(jsonPath("$.estoqueBaixo").value(true));
 
-        mockMvc.perform(post("/estoques/{produtoId}/saida", 1)
+        mockMvc.perform(post("/estoque/{produtoId}/saida", 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"quantidade": 5}
@@ -87,7 +87,7 @@ class EstoqueControllerIntegracaoTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400));
 
-        mockMvc.perform(post("/estoques/{produtoId}/entrada", 1)
+        mockMvc.perform(post("/estoque/{produtoId}/entrada", 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"quantidade": 20, "observacao": "Reposicao"}
@@ -95,11 +95,11 @@ class EstoqueControllerIntegracaoTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.quantidade").value(22));
 
-        mockMvc.perform(get("/estoques/{produtoId}/movimentacoes", 1))
+        mockMvc.perform(get("/estoque/{produtoId}/movimentacoes", 1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(3));
 
-        mockMvc.perform(get("/estoques/baixos"))
+        mockMvc.perform(get("/estoque/baixos"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
@@ -107,7 +107,7 @@ class EstoqueControllerIntegracaoTest {
     @Test
     @DisplayName("recusa estoque para produto que nao existe no produto-service")
     void naoDeveCadastrarEstoqueDeProdutoInexistente() throws Exception {
-        mockMvc.perform(post("/estoques")
+        mockMvc.perform(post("/estoque")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"produtoId": 404, "quantidade": 5, "estoqueMinimo": 1}
@@ -120,7 +120,7 @@ class EstoqueControllerIntegracaoTest {
     @Test
     @DisplayName("devolve 404 quando o produto nao tem estoque cadastrado")
     void deveDevolver404ParaEstoqueInexistente() throws Exception {
-        mockMvc.perform(get("/estoques/{produtoId}", 777))
+        mockMvc.perform(get("/estoque/{produtoId}", 777))
                 .andExpect(status().isNotFound());
     }
 }

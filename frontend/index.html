@@ -122,10 +122,10 @@
           <p>O fluxo que esta tela vai disparar, conforme combinado pela equipe:</p>
           <ol>
             <li>Vendas consulta <code>GET /produtos/{id}</code> para obter preço</li>
-            <li>Vendas consulta <code>GET /estoques/{produtoId}/disponibilidade</code></li>
+            <li>Vendas consulta <code>GET /estoque/{produtoId}/disponibilidade</code></li>
             <li>Vendas calcula o total e aplica o desconto</li>
             <li>Vendas chama <code>POST /pagamentos</code></li>
-            <li>Aprovado o pagamento, Vendas chama <code>POST /estoques/{produtoId}/saida</code></li>
+            <li>Aprovado o pagamento, Vendas chama <code>POST /estoque/{produtoId}/saida</code></li>
           </ol>
           <p class="nota">
             A baixa no estoque só acontece depois do pagamento aprovado — por

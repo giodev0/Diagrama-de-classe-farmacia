@@ -54,8 +54,8 @@ Depois acesse a interface em **http://localhost:8080**.
 |---------------------|-------------------------|--------------------------|
 | `frontend`          | http://localhost:8080   | —                        |
 | `usuario-service`   | http://localhost:8001   | Postgres `localhost:5434`|
-| `produto-service`   | http://localhost:8002   | Postgres `localhost:5435`|
-| `estoque-service`   | http://localhost:8003   | Postgres `localhost:5436`|
+| `produto-service`   | http://localhost:8002   | MySQL `localhost:3307`   |
+| `estoque-service`   | http://localhost:8003   | MySQL `localhost:3308`   |
 | `pagamento-service` | http://localhost:3005   | SQLite (volume)          |
 
 Para subir só uma parte: `docker compose up --build produto-service estoque-service`.

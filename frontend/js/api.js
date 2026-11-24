@@ -10,7 +10,7 @@ const Api = (() => {
     auth: '/api/auth',
     usuarios: '/api/usuarios',
     produtos: '/api/produtos',
-    estoques: '/api/estoques',
+    estoques: '/api/estoque',
     pagamentos: '/api/pagamentos',
   };
 

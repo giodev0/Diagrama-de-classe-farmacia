@@ -5,9 +5,11 @@ spring:
   application:
     name: produto-service
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5435/produto_db}
-    username: ${DATABASE_USER:postgres}
-    password: ${DATABASE_PASSWORD:postgres}
+    # allowPublicKeyRetrieval e necessario porque o MySQL 8 usa
+    # caching_sha2_password e a conexao local nao vai por SSL.
+    url: "${DATABASE_URL:jdbc:mysql://localhost:3307/produto_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}"
+    username: ${DATABASE_USER:farmacia}
+    password: ${DATABASE_PASSWORD:farmacia}
   jpa:
     hibernate:
       ddl-auto: update

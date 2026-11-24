@@ -59,7 +59,7 @@ public class ManipuladorDeErros {
         return construir(HttpStatus.BAD_REQUEST, "JSON invalido, ausente ou mal formatado", req);
     }
 
-    /** Ex.: /estoques/abc, onde produtoId precisa ser numerico. */
+    /** Ex.: /estoque/abc, onde produtoId precisa ser numerico. */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErroResponse> parametroComTipoErrado(MethodArgumentTypeMismatchException ex,
                                                                HttpServletRequest req) {
@@ -67,7 +67,7 @@ public class ManipuladorDeErros {
         return construir(HttpStatus.BAD_REQUEST, mensagem, req);
     }
 
-    /** Ex.: /estoques/15/disponibilidade sem o ?quantidade=. */
+    /** Ex.: /estoque/15/disponibilidade sem o ?quantidade=. */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ErroResponse> parametroAusente(MissingServletRequestParameterException ex,
                                                          HttpServletRequest req) {

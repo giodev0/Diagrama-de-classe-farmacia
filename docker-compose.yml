@@ -36,33 +36,37 @@ services:
       - "3005:3005"
     volumes:
       - pagamento-data:/app/database
-  postgres-produto:
-    container_name: postgres-produto
-    image: postgres:16
+  mysql-produto:
+    container_name: mysql-produto
+    image: mysql:8.4
+    # 3306 no host costuma estar ocupada por um MySQL instalado na maquina,
+    # por isso cada banco publica em uma porta propria.
     ports:
-      - "5435:5432"
+      - "3307:3306"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: produto_db
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: produto_db
+      MYSQL_USER: farmacia
+      MYSQL_PASSWORD: farmacia
     volumes:
-      - produto-data:/var/lib/postgresql/data
+      - produto-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d produto_db"]
-      interval: 5s
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 40s
   produto-service:
     container_name: produto-service
     build: ./produto-service
     ports:
       - "8002:8002"
     environment:
-      DATABASE_URL: jdbc:postgresql://postgres-produto:5432/produto_db
-      DATABASE_USER: postgres
-      DATABASE_PASSWORD: postgres
+      DATABASE_URL: "jdbc:mysql://mysql-produto:3306/produto_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+      DATABASE_USER: farmacia
+      DATABASE_PASSWORD: farmacia
     depends_on:
-      postgres-produto:
+      mysql-produto:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8002/ || exit 1"]
@@ -70,34 +74,36 @@ services:
       timeout: 5s
       retries: 10
       start_period: 40s
-  postgres-estoque:
-    container_name: postgres-estoque
-    image: postgres:16
+  mysql-estoque:
+    container_name: mysql-estoque
+    image: mysql:8.4
     ports:
-      - "5436:5432"
+      - "3308:3306"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: estoque_db
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: estoque_db
+      MYSQL_USER: farmacia
+      MYSQL_PASSWORD: farmacia
     volumes:
-      - estoque-data:/var/lib/postgresql/data
+      - estoque-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d estoque_db"]
-      interval: 5s
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 40s
   estoque-service:
     container_name: estoque-service
     build: ./estoque-service
     ports:
       - "8003:8003"
     environment:
-      DATABASE_URL: jdbc:postgresql://postgres-estoque:5432/estoque_db
-      DATABASE_USER: postgres
-      DATABASE_PASSWORD: postgres
+      DATABASE_URL: "jdbc:mysql://mysql-estoque:3306/estoque_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+      DATABASE_USER: farmacia
+      DATABASE_PASSWORD: farmacia
       PRODUTO_SERVICE_URL: http://produto-service:8002
     depends_on:
-      postgres-estoque:
+      mysql-estoque:
         condition: service_healthy
       produto-service:
         condition: service_healthy

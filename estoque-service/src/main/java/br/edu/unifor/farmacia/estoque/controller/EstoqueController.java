@@ -28,7 +28,7 @@ import java.util.List;
  * que o servico de Vendas conhece.
  */
 @RestController
-@RequestMapping("/estoques")
+@RequestMapping("/estoque")
 public class EstoqueController {
 
     private final EstoqueService service;
@@ -41,7 +41,7 @@ public class EstoqueController {
     public ResponseEntity<EstoqueResponse> cadastrar(@RequestBody @Valid EstoqueRequest dados,
                                                      UriComponentsBuilder uriBuilder) {
         EstoqueResponse estoque = service.cadastrar(dados);
-        URI endereco = uriBuilder.path("/estoques/{produtoId}")
+        URI endereco = uriBuilder.path("/estoque/{produtoId}")
                 .buildAndExpand(estoque.produtoId()).toUri();
         return ResponseEntity.created(endereco).body(estoque);
     }

@@ -4,7 +4,7 @@ Microsserviço de **Estoque** do Sistema de Farmácia.
 
 - **Responsável:** Giovana Fernandes
 - **Linguagem:** Java 21 + Spring Boot 3.4
-- **Banco próprio:** PostgreSQL (`estoque_db`)
+- **Banco próprio:** MySQL 8 (`estoque_db`)
 - **Porta:** `8003`
 - **Papel na arquitetura:** **provedor e consumidor**. Provê quantidade e
   disponibilidade para Vendas e Relatórios, e consome a API de Produtos para
@@ -23,11 +23,11 @@ Tabela `estoques`:
 
 | Campo            | Tipo      | Observação                          |
 |------------------|-----------|-------------------------------------|
-| `id`             | bigserial | PK                                  |
+| `id`             | bigint AUTO_INCREMENT | PK                                  |
 | `produto_id`     | bigint    | único — chave usada pelas Vendas    |
-| `quantidade`     | integer   | nunca negativa                      |
-| `estoque_minimo` | integer   | nível de alerta                     |
-| `atualizado_em`  | timestamp |                                     |
+| `quantidade`     | int       | nunca negativa                      |
+| `estoque_minimo` | int       | nível de alerta                     |
+| `atualizado_em`  | datetime(6) |                                     |
 | `versao`         | bigint    | trava otimista contra venda dupla   |
 
 Tabela `movimentacoes_estoque` (histórico de entradas e saídas):
@@ -38,20 +38,20 @@ Tabela `movimentacoes_estoque` (histórico de entradas e saídas):
 
 | Método  | Rota                                          | Status | Descrição                              |
 |---------|-----------------------------------------------|--------|----------------------------------------|
-| `POST`  | `/estoques`                                    | `201`  | Criar o estoque de um produto          |
-| `GET`   | `/estoques`                                    | `200`  | Listar todos os estoques               |
-| `GET`   | `/estoques/baixos`                             | `200`  | Produtos com estoque baixo             |
-| `GET`   | `/estoques/{produtoId}`                        | `200`  | Consultar quantidade                   |
-| `GET`   | `/estoques/{produtoId}/disponibilidade?quantidade=2` | `200` | Verificar disponibilidade        |
-| `POST`  | `/estoques/{produtoId}/entrada`                | `200`  | Adicionar unidades                     |
-| `POST`  | `/estoques/{produtoId}/saida`                  | `200`  | Retirar unidades                       |
-| `PATCH` | `/estoques/{produtoId}/estoque-minimo`         | `200`  | Alterar o estoque mínimo               |
-| `GET`   | `/estoques/{produtoId}/movimentacoes`          | `200`  | Histórico do produto                   |
+| `POST`  | `/estoque`                                    | `201`  | Criar o estoque de um produto          |
+| `GET`   | `/estoque`                                    | `200`  | Listar todos os estoques               |
+| `GET`   | `/estoque/baixos`                             | `200`  | Produtos com estoque baixo             |
+| `GET`   | `/estoque/{produtoId}`                        | `200`  | Consultar quantidade                   |
+| `GET`   | `/estoque/{produtoId}/disponibilidade?quantidade=2` | `200` | Verificar disponibilidade        |
+| `POST`  | `/estoque/{produtoId}/entrada`                | `200`  | Adicionar unidades                     |
+| `POST`  | `/estoque/{produtoId}/saida`                  | `200`  | Retirar unidades                       |
+| `PATCH` | `/estoque/{produtoId}/estoque-minimo`         | `200`  | Alterar o estoque mínimo               |
+| `GET`   | `/estoque/{produtoId}/movimentacoes`          | `200`  | Histórico do produto                   |
 | `GET`   | `/`                                            | `200`  | Status do serviço                      |
 
 ### Criar o estoque de um produto
 
-`POST /estoques`
+`POST /estoque`
 
 ```json
 { "produtoId": 15, "quantidade": 10, "estoqueMinimo": 3 }
@@ -72,7 +72,7 @@ Tabela `movimentacoes_estoque` (histórico de entradas e saídas):
 
 ### Verificar disponibilidade (usado pelo serviço de Vendas)
 
-`GET /estoques/15/disponibilidade?quantidade=2`
+`GET /estoque/15/disponibilidade?quantidade=2`
 
 ```json
 {
@@ -85,7 +85,7 @@ Tabela `movimentacoes_estoque` (histórico de entradas e saídas):
 
 ### Retirar unidades (só depois do pagamento aprovado)
 
-`POST /estoques/15/saida`
+`POST /estoque/15/saida`
 
 ```json
 { "quantidade": 2, "observacao": "Venda 1042" }
@@ -99,7 +99,7 @@ responde `400` e **não** altera a quantidade:
   "timestamp": "2026-11-22T20:15:03.114",
   "status": 400,
   "erro": "Estoque insuficiente para o produto 15: disponivel 1, solicitado 2",
-  "caminho": "/estoques/15/saida"
+  "caminho": "/estoque/15/saida"
 }
 ```
 
@@ -129,12 +129,23 @@ Com Docker (sobe junto o `produto-service`, de quem ele depende):
 docker compose up --build estoque-service
 ```
 
-Localmente (PostgreSQL em `localhost:5436` com o banco `estoque_db` e o
-`produto-service` rodando em `localhost:8002`):
+Localmente, com o MySQL que o compose publica em `localhost:3308` e o
+`produto-service` rodando em `localhost:8002`:
 
 ```bash
 mvn spring-boot:run
 ```
+
+Para usar um MySQL instalado direto na máquina (porta `3306`), crie o banco e
+o usuário uma vez:
+
+```sql
+CREATE DATABASE estoque_db CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+CREATE USER 'farmacia'@'localhost' IDENTIFIED BY 'farmacia';
+GRANT ALL PRIVILEGES ON estoque_db.* TO 'farmacia'@'localhost';
+```
+
+As tabelas são criadas sozinhas pelo Hibernate (`ddl-auto: update`).
 
 Variáveis de ambiente: `DATABASE_URL`, `DATABASE_USER`, `DATABASE_PASSWORD`,
 `PRODUTO_SERVICE_URL`, `PRODUTO_SERVICE_TIMEOUT`, `SERVER_PORT`.

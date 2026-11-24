@@ -14,7 +14,7 @@ O nginx serve os arquivos **e** funciona como proxy reverso: cada caminho
 
 ```
 navegador  →  /api/produtos/15   →  nginx  →  produto-service:8002/produtos/15
-           →  /api/estoques/15   →  nginx  →  estoque-service:8003/estoques/15
+           →  /api/estoque/15   →  nginx  →  estoque-service:8003/estoque/15
            →  /api/pagamentos    →  nginx  →  pagamento-service:3005/pagamentos
            →  /api/auth/login    →  nginx  →  usuario-service:8001/auth/login
 ```

@@ -4,7 +4,7 @@ Microsserviço de **Produtos** do Sistema de Farmácia.
 
 - **Responsável:** Giovana Fernandes
 - **Linguagem:** Java 21 + Spring Boot 3.4
-- **Banco próprio:** PostgreSQL (`produto_db`)
+- **Banco próprio:** MySQL 8 (`produto_db`)
 - **Porta:** `8002`
 - **Papel na arquitetura:** **provedor**. Vendas, Estoque e Relatórios consultam
   este serviço por HTTP; ninguém acessa o `BD Produtos` diretamente.
@@ -15,15 +15,15 @@ Tabela `produtos`:
 
 | Campo           | Tipo          | Observação                          |
 |-----------------|---------------|-------------------------------------|
-| `id`            | bigserial     | PK                                  |
+| `id`            | bigint AUTO_INCREMENT | PK                                  |
 | `nome`          | varchar(120)  | obrigatório                         |
 | `descricao`     | varchar(255)  | opcional                            |
-| `preco`         | numeric(10,2) | sempre maior que zero               |
+| `preco`         | decimal(10,2) | sempre maior que zero               |
 | `codigo_barras` | varchar(50)   | único                               |
 | `tipo`          | varchar(30)   | enum `TipoProduto`                  |
 | `ativo`         | boolean       | exclusão lógica                     |
-| `criado_em`     | timestamp     |                                     |
-| `atualizado_em` | timestamp     |                                     |
+| `criado_em`     | datetime(6)   |                                     |
+| `atualizado_em` | datetime(6)   |                                     |
 
 `TipoProduto`: `MEDICAMENTO`, `GENERICO`, `COSMETICO`, `HIGIENE_PESSOAL`,
 `SUPLEMENTO`, `OUTRO`.
@@ -119,11 +119,28 @@ Com Docker (junto com todo o sistema, a partir da raiz do repositório):
 docker compose up --build produto-service
 ```
 
-Localmente (precisa de um PostgreSQL em `localhost:5435` com o banco `produto_db`):
+Localmente, apontando para o MySQL que o compose publica em `localhost:3307`:
 
 ```bash
 mvn spring-boot:run
 ```
+
+Para usar um MySQL instalado direto na máquina (porta `3306`), crie o banco e
+o usuário uma vez:
+
+```sql
+CREATE DATABASE produto_db CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+CREATE USER 'farmacia'@'localhost' IDENTIFIED BY 'farmacia';
+GRANT ALL PRIVILEGES ON produto_db.* TO 'farmacia'@'localhost';
+```
+
+e aponte a aplicação para ele:
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments=--spring.datasource.url=jdbc:mysql://localhost:3306/produto_db?useSSL=false^&allowPublicKeyRetrieval=true
+```
+
+As tabelas são criadas sozinhas pelo Hibernate (`ddl-auto: update`).
 
 ## Testes
 

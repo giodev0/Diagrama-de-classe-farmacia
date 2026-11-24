@@ -46,7 +46,7 @@ class ContratoDeErrosTest {
     @Test
     @DisplayName("produtoId nao numerico vira 400, nao 500")
     void produtoIdInvalidoDeveSer400() throws Exception {
-        mockMvc.perform(get("/estoques/abc"))
+        mockMvc.perform(get("/estoque/abc"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400));
     }
@@ -54,7 +54,7 @@ class ContratoDeErrosTest {
     @Test
     @DisplayName("disponibilidade sem o parametro quantidade vira 400")
     void quantidadeAusenteDeveSer400() throws Exception {
-        mockMvc.perform(get("/estoques/{produtoId}/disponibilidade", 1))
+        mockMvc.perform(get("/estoque/{produtoId}/disponibilidade", 1))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.erro").value("Parametro obrigatorio ausente: quantidade"));
     }
@@ -69,7 +69,7 @@ class ContratoDeErrosTest {
     @Test
     @DisplayName("metodo nao suportado vira 405, nao 500")
     void metodoErradoDeveSer405() throws Exception {
-        mockMvc.perform(post("/estoques/1")
+        mockMvc.perform(post("/estoque/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isMethodNotAllowed());
