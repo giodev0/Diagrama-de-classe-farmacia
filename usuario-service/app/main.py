@@ -1,12 +1,10 @@
-from fastapi import FastAPI, Request
-from fastapi.encoders import jsonable_encoder
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.controllers.usuario_controller import router as usuario_router
 from app.core.config import settings
 from app.core.database import Base, SessionLocal, engine
+from app.core.erros import registrar_handlers_de_erro
 from app.core.security import gerar_hash_senha
 from app.models.usuario import Usuario
 from app.repositories.usuario_repository import UsuarioRepository
@@ -39,9 +37,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.exception_handler(RequestValidationError)
-async def erro_validacao(request: Request, exc: RequestValidationError):
-    return JSONResponse(status_code=400, content={"detail": jsonable_encoder(exc.errors())})
-
+registrar_handlers_de_erro(app)
 
 app.include_router(usuario_router)
