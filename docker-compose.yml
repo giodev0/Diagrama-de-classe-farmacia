@@ -134,9 +134,48 @@ services:
       - produto-service
       - estoque-service
       - pagamento-service
+  postgres-venda:
+    container_name: postgres-venda
+    image: postgres:16
+    ports:
+      - "5437:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: venda_db
+      TZ: America/Fortaleza
+    volumes:
+      - venda-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d venda_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  venda-service:
+    container_name: venda-service
+    build: ./venda-service
+    ports:
+      - "8004:8004"
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres-venda:5432/venda_db
+      JWT_SECRET: ${JWT_SECRET}
+      PRODUTO_URL: http://produto-service:8002
+      ESTOQUE_URL: http://produto-service:8003
+      PAGAMENTO_URL: http://produto-service:8005
+      USAR_MOCKS: "false"
+    depends_on:
+      postgres-venda:
+        condition: service_healthy
+      produto-service:
+        condition: service_healthy
+      estoque-service:
+        condition: service_started
+      pagamento-service:
+        condition: service_started
 volumes:
   usuario-data:
   pagamento-data:
   relatorio-data:
   produto-data:
   estoque-data:
+  venda-data:
