@@ -63,6 +63,13 @@ code {
 
 .cartao-login h1 { font-size: 1.3rem; }
 
+.logo-login {
+  display: block;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+}
+
 .subtitulo {
   color: var(--texto-suave);
   margin: 0 0 1.5rem;
@@ -123,7 +130,22 @@ input:focus, select:focus, textarea:focus {
 
 button { font: inherit; cursor: pointer; }
 
+/* ---------------- Ícones (img/icones.svg) ---------------- */
+
+.icone {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+}
+
+/* O sublinhado do botão de texto não deve passar por baixo do ícone. */
+.botao-texto .icone { text-decoration: none; }
+
 .botao-primario, .botao-secundario {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
   border: none;
   border-radius: var(--raio);
   padding: .6rem 1.1rem;
@@ -142,6 +164,9 @@ button { font: inherit; cursor: pointer; }
 }
 
 .botao-texto {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
   background: none;
   border: none;
   color: var(--texto-suave);
@@ -179,7 +204,14 @@ button:disabled { opacity: .55; cursor: not-allowed; }
   gap: .5rem;
 }
 
-.marca { font-weight: 700; }
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  font-weight: 700;
+}
+
+.marca .icone { width: 1.4em; height: 1.4em; }
 
 .usuario {
   display: flex;
@@ -201,6 +233,9 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 }
 
 .aba {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
   background: none;
   border: none;
   border-bottom: 3px solid transparent;
@@ -369,7 +404,14 @@ td.acoes, th.acoes { text-align: right; }
 
 .rodape-venda label { margin: 0 0 .3rem; }
 .rodape-venda input { width: 90px; }
-.rodape-venda .botao-primario { margin-left: auto; }
+.rodape-venda > .botao-primario { margin-left: auto; }
+
+.grupo-botoes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
 
 .resumo-venda {
   display: flex;
@@ -434,7 +476,14 @@ td.acoes, th.acoes { text-align: right; }
   padding: 1.5rem;
 }
 
-.pendente h3 { color: var(--verde-escuro); }
+.pendente h3 {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  color: var(--verde-escuro);
+}
+
+.pendente h3 .icone { color: var(--amarelo); width: 1.3em; height: 1.3em; }
 .pendente ol { line-height: 1.7; padding-left: 1.2rem; }
 
 .nota {

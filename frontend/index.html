@@ -4,14 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema de Farmácia</title>
-  <link rel="stylesheet" href="css/estilo.css">
+  <link rel="icon" type="image/svg+xml" href="img/logo.svg">
+  <!--
+    O "?v=2" obriga o navegador a baixar de novo o CSS e o JS que ele tinha
+    guardado de versoes anteriores. Daqui para frente o nginx manda
+    "Cache-Control: no-cache" e isso deixa de ser necessario.
+  -->
+  <link rel="stylesheet" href="css/estilo.css?v=2">
 </head>
 <body>
 
   <!-- ===================== TELA DE LOGIN ===================== -->
   <div id="tela-login" class="tela-login">
     <form id="form-login" class="cartao-login">
-      <h1>💊 Sistema de Farmácia</h1>
+      <img src="img/logo.svg" alt="" class="logo-login">
+      <h1>Sistema de Farmácia</h1>
       <p class="subtitulo">Entre com sua conta de funcionário</p>
 
       <label for="login-email">E-mail</label>
@@ -28,19 +35,19 @@
   <!-- ===================== APLICAÇÃO ===================== -->
   <div id="app" hidden>
     <header class="cabecalho">
-      <span class="marca">💊 Sistema de Farmácia</span>
+      <span class="marca"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#marca"/></svg>Sistema de Farmácia</span>
       <div class="usuario">
         <span id="usuario-logado"></span>
-        <button id="botao-sair" class="botao-texto">Sair</button>
+        <button id="botao-sair" class="botao-texto"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#sair"/></svg>Sair</button>
       </div>
     </header>
 
     <nav class="abas">
-      <button class="aba ativa" data-secao="produtos">Produtos</button>
-      <button class="aba" data-secao="estoque">Estoque</button>
-      <button class="aba" data-secao="vendas">Vendas</button>
-      <button class="aba" data-secao="pagamentos">Pagamentos</button>
-      <button class="aba" data-secao="relatorios">Relatórios</button>
+      <button class="aba ativa" data-secao="produtos"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#produtos"/></svg>Produtos</button>
+      <button class="aba" data-secao="estoque"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#estoque"/></svg>Estoque</button>
+      <button class="aba" data-secao="vendas"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#vendas"/></svg>Vendas</button>
+      <button class="aba" data-secao="pagamentos"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#pagamentos"/></svg>Pagamentos</button>
+      <button class="aba" data-secao="relatorios"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#relatorios"/></svg>Relatórios</button>
     </nav>
 
     <div id="avisos" class="avisos" aria-live="polite"></div>
@@ -51,7 +58,7 @@
       <section id="secao-produtos" class="secao ativa">
         <div class="cabecalho-secao">
           <h2>Produtos</h2>
-          <button id="novo-produto" class="botao-primario">Novo produto</button>
+          <button id="novo-produto" class="botao-primario"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#mais"/></svg>Novo produto</button>
         </div>
 
         <form id="filtro-produtos" class="barra-filtro">
@@ -86,7 +93,7 @@
       <section id="secao-estoque" class="secao">
         <div class="cabecalho-secao">
           <h2>Estoque</h2>
-          <button id="novo-estoque" class="botao-primario">Cadastrar estoque</button>
+          <button id="novo-estoque" class="botao-primario"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#mais"/></svg>Cadastrar estoque</button>
         </div>
 
         <label class="caixa-selecao">
@@ -112,66 +119,80 @@
         <h2>Vendas</h2>
 
         <div id="vendas-indisponivel" class="pendente" hidden>
-          <h3>O <code>venda-service</code> ainda não está no ar</h3>
+          <h3><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#alerta"/></svg>O <code>venda-service</code> não respondeu</h3>
           <p>
-            Esta tela já está implementada e segue o contrato definido em
-            <code>CONTRATOS.md</code>. Para ligá-la, troque o bloco
-            <code>/api/vendas</code> do <code>frontend/nginx.conf</code> pelo
-            <code>proxy_pass</code> comentado logo acima dele e descomente o
-            serviço no <code>docker-compose.yml</code>.
-          </p>
-          <p class="nota">
-            Nenhuma linha de JavaScript precisa mudar.
+            Confira se o container está no ar com
+            <code>docker compose ps venda-service</code> e veja o log com
+            <code>docker compose logs venda-service</code>.
           </p>
         </div>
 
         <div id="vendas-conteudo">
           <div class="painel">
-            <h3>Nova venda</h3>
-            <div class="barra-filtro">
-              <button type="button" id="adicionar-item" class="botao-primario">Adicionar item</button>
-              <button type="button" id="limpar-venda" class="botao-texto">Limpar</button>
+            <div id="venda-sem-andamento">
+              <h3>Venda em andamento</h3>
+              <p class="ajuda">
+                Nenhuma venda aberta. Comece uma nova ou continue uma venda em
+                aberto da lista abaixo.
+              </p>
+              <button type="button" id="nova-venda" class="botao-primario"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#mais"/></svg>Nova venda</button>
             </div>
 
-            <div class="tabela-rolavel">
-              <table id="tabela-carrinho">
-                <thead>
-                  <tr>
-                    <th>Produto</th><th>Qtd.</th><th>Preço</th>
-                    <th>Subtotal</th><th class="acoes">Ações</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-
-            <div class="rodape-venda">
-              <label for="venda-desconto">Desconto (%)</label>
-              <input type="number" id="venda-desconto" min="0" max="100" step="1" value="0">
-
-              <div class="resumo-venda">
-                <div><span>Bruto</span><strong id="venda-bruto">R$ 0,00</strong></div>
-                <div><span>Desconto</span><strong id="venda-valor-desconto">- R$ 0,00</strong></div>
-                <div class="destaque"><span>Total</span><strong id="venda-total">R$ 0,00</strong></div>
+            <div id="venda-em-andamento" hidden>
+              <div class="cabecalho-secao">
+                <h3 id="venda-atual-titulo">Venda</h3>
+                <div class="grupo-botoes">
+                  <button type="button" id="adicionar-item" class="botao-primario"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#mais"/></svg>Adicionar item</button>
+                  <button type="button" id="cancelar-venda-atual" class="botao-texto">Cancelar venda</button>
+                  <button type="button" id="fechar-venda-atual" class="botao-texto">Deixar para depois</button>
+                </div>
               </div>
 
-              <button type="button" id="finalizar-venda" class="botao-primario" disabled>
-                Criar venda
-              </button>
+              <div class="tabela-rolavel">
+                <table id="tabela-itens-venda">
+                  <thead>
+                    <tr>
+                      <th>Produto</th><th>Qtd.</th><th>Preço</th>
+                      <th>Subtotal</th><th class="acoes">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+
+              <div class="rodape-venda">
+                <div>
+                  <label for="venda-desconto">Desconto (%)</label>
+                  <div class="grupo-botoes">
+                    <input type="number" id="venda-desconto" min="0" max="100" step="0.01" value="0">
+                    <button type="button" id="aplicar-desconto" class="botao-secundario">Aplicar</button>
+                  </div>
+                </div>
+
+                <div class="resumo-venda">
+                  <div><span>Subtotal</span><strong id="venda-subtotal">R$ 0,00</strong></div>
+                  <div><span>Desconto</span><strong id="venda-valor-desconto">- R$ 0,00</strong></div>
+                  <div class="destaque"><span>Total</span><strong id="venda-total">R$ 0,00</strong></div>
+                </div>
+
+                <button type="button" id="finalizar-venda" class="botao-primario" disabled>
+                  <svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#pagamentos"/></svg>Receber pagamento
+                </button>
+              </div>
+              <p class="ajuda">
+                Preços, desconto e total são calculados pelo <code>venda-service</code>.
+                Funcionários podem dar até 20% de desconto. O estoque só é
+                reduzido depois que o pagamento for aprovado.
+              </p>
             </div>
-            <p class="ajuda">
-              A venda nasce como rascunho. O estoque só é reduzido depois que o
-              pagamento for aprovado.
-            </p>
           </div>
 
           <div class="cabecalho-secao">
             <h3>Vendas registradas</h3>
             <select id="filtro-status-venda">
               <option value="">Todas</option>
-              <option value="RASCUNHO">Em aberto</option>
+              <option value="ABERTA">Em aberto</option>
               <option value="FINALIZADA">Finalizadas</option>
-              <option value="PAGAMENTO_RECUSADO">Pagamento recusado</option>
               <option value="CANCELADA">Canceladas</option>
             </select>
           </div>
@@ -180,8 +201,8 @@
             <table id="tabela-vendas">
               <thead>
                 <tr>
-                  <th>ID</th><th>Data</th><th>Itens</th>
-                  <th>Total</th><th>Situação</th><th class="acoes">Ações</th>
+                  <th>ID</th><th>Data</th><th>Itens</th><th>Total</th>
+                  <th>Pagamento</th><th>Situação</th><th class="acoes">Ações</th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -194,7 +215,7 @@
       <section id="secao-pagamentos" class="secao">
         <div class="cabecalho-secao">
           <h2>Pagamentos</h2>
-          <button id="novo-pagamento" class="botao-primario">Processar pagamento</button>
+          <button id="novo-pagamento" class="botao-primario"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#pagamentos"/></svg>Processar pagamento</button>
         </div>
 
         <div class="tabela-rolavel">
@@ -215,31 +236,32 @@
         <h2>Relatórios</h2>
 
         <div id="relatorios-indisponivel" class="pendente" hidden>
-          <h3>O <code>relatorio-service</code> ainda não está no ar</h3>
+          <h3><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#alerta"/></svg>O <code>relatorio-service</code> não respondeu</h3>
           <p>
-            Esta tela já está implementada e segue o contrato definido em
-            <code>CONTRATOS.md</code>. Para ligá-la, troque o bloco
-            <code>/api/relatorios</code> do <code>frontend/nginx.conf</code>
-            pelo <code>proxy_pass</code> comentado logo acima dele e descomente
-            o serviço no <code>docker-compose.yml</code>.
-          </p>
-          <p class="nota">
-            Nenhuma linha de JavaScript precisa mudar.
+            Confira se o container está no ar com
+            <code>docker compose ps relatorio-service</code> e veja o log com
+            <code>docker compose logs relatorio-service</code>.
           </p>
         </div>
 
         <div id="relatorios-conteudo">
           <div class="barra-filtro">
-            <button type="button" id="relatorio-vendas" class="botao-primario">Vendas</button>
-            <button type="button" id="relatorio-produtos" class="botao-secundario">Produtos</button>
-            <button type="button" id="relatorio-estoque" class="botao-secundario">Estoque</button>
-            <button type="button" id="sincronizar-relatorios" class="botao-texto">Sincronizar dados</button>
+            <button type="button" id="relatorio-vendas" class="botao-primario"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#vendas"/></svg>Vendas</button>
+            <button type="button" id="relatorio-produtos" class="botao-secundario"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#produtos"/></svg>Produtos</button>
+            <button type="button" id="relatorio-estoque" class="botao-secundario"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#estoque"/></svg>Estoque</button>
+            <button type="button" id="sincronizar-relatorios" class="botao-texto"><svg class="icone" width="18" height="18" aria-hidden="true"><use href="img/icones.svg#sincronizar"/></svg>Sincronizar dados</button>
           </div>
 
+          <p class="ajuda">
+            O <code>relatorio-service</code> guarda uma cópia dos dados dos
+            outros serviços. Clique em <strong>Sincronizar dados</strong> para
+            atualizar essa cópia antes de gerar um relatório.
+          </p>
+
           <div class="barra-filtro">
-            <label for="relatorio-inicio" class="rotulo-inline">De</label>
+            <label for="relatorio-inicio" class="rotulo-inline">Vendas de</label>
             <input type="date" id="relatorio-inicio">
-            <label for="relatorio-fim" class="rotulo-inline">Até</label>
+            <label for="relatorio-fim" class="rotulo-inline">até</label>
             <input type="date" id="relatorio-fim">
           </div>
 
@@ -264,14 +286,14 @@
     </div>
   </div>
 
-  <script src="js/api.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/produtos.js"></script>
-  <script src="js/estoque.js"></script>
-  <script src="js/pagamentos.js"></script>
-  <script src="js/vendas.js"></script>
-  <script src="js/relatorios.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/api.js?v=2"></script>
+  <script src="js/ui.js?v=2"></script>
+  <script src="js/auth.js?v=2"></script>
+  <script src="js/produtos.js?v=2"></script>
+  <script src="js/estoque.js?v=2"></script>
+  <script src="js/pagamentos.js?v=2"></script>
+  <script src="js/vendas.js?v=2"></script>
+  <script src="js/relatorios.js?v=2"></script>
+  <script src="js/app.js?v=2"></script>
 </body>
 </html>

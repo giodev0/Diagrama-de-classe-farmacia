@@ -16,6 +16,8 @@ O nginx serve os arquivos **e** funciona como proxy reverso: cada caminho
 navegador  →  /api/produtos/15   →  nginx  →  produto-service:8002/produtos/15
            →  /api/estoque/15   →  nginx  →  estoque-service:8003/estoque/15
            →  /api/pagamentos    →  nginx  →  pagamento-service:8005/pagamentos
+           →  /api/vendas        →  nginx  →  venda-service:8004/vendas
+           →  /api/relatorios    →  nginx  →  relatorio-service:8006/relatorios
            →  /api/auth/login    →  nginx  →  usuario-service:8001/auth/login
 ```
 
@@ -49,35 +51,42 @@ docker compose restart frontend      # recarrega após alterar os arquivos
 
 | Aba | Serviço consumido | Estado |
 |---|---|---|
-| Login | `usuario-service` | ✅ funcionando |
-| Produtos | `produto-service` | ✅ CRUD completo com filtros |
-| Estoque | `estoque-service` + `produto-service` | ✅ entrada, saída, mínimo, histórico |
-| Pagamentos | `pagamento-service` | ✅ consulta e processamento |
-| Vendas | `venda-service` | ✅ implementada, aguardando o serviço subir |
-| Relatórios | `relatorio-service` | ✅ implementada, aguardando o serviço subir |
+| Login | `usuario-service` | funcionando |
+| Produtos | `produto-service` | CRUD completo com filtros |
+| Estoque | `estoque-service` + `produto-service` | entrada, saída, mínimo, histórico |
+| Pagamentos | `pagamento-service` | consulta e processamento |
+| Vendas | `venda-service` | venda montada item a item, desconto, pagamento e cancelamento |
+| Relatórios | `relatorio-service` | vendas por período, produtos mais vendidos e situação do estoque |
 
-### As telas de Vendas e Relatórios já estão prontas
+### Detalhe da tela de Vendas
 
-Foram escritas contra o contrato de [`CONTRATOS.md`](../CONTRATOS.md). Como os
-serviços ainda não existem, o nginx responde `503` nesses caminhos e as telas
-mostram um aviso explicando o que falta, em vez de quebrarem.
+A venda é montada **no servidor**, um passo de cada vez:
 
-**Para ligar, quando os serviços existirem:**
+```
+Nova venda          POST /vendas                 -> venda ABERTA, vazia
+Adicionar item      POST /vendas/{id}/itens      -> venda-service busca o preço
+                                                    em Produtos e confere o Estoque
+Remover item        DELETE /vendas/{id}/itens/{itemId}
+Aplicar desconto    PUT  /vendas/{id}/desconto   -> funcionário: no máximo 20%
+Receber pagamento   POST /vendas/{id}/finalizar  -> paga e só então baixa o estoque
+Cancelar            PUT  /vendas/{id}/cancelar
+```
 
-1. No [`nginx.conf`](nginx.conf), apague o bloco `return 503` e descomente o
-   `proxy_pass` logo acima dele
-2. Descomente o serviço no `docker-compose.yml`
-3. `docker compose up --build`
+A cada passo o serviço devolve a venda inteira, e a tela só redesenha o que
+recebeu. **O frontend nunca calcula preço nem total.** O id da venda em
+andamento fica em `sessionStorage`, então recarregar a página não perde o
+caixa; vendas deixadas em aberto podem ser retomadas pela lista
+("Continuar").
 
-**Nenhuma linha de JavaScript muda.**
+### Detalhe da tela de Relatórios
 
-> Não descomente o `proxy_pass` antes do serviço existir: o nginx resolve o
-> nome do upstream ao iniciar e se recusa a subir se o host não existir — o
-> que derrubaria o frontend inteiro.
-
-A tela de Vendas monta o carrinho e calcula bruto, desconto e total no
-navegador só para exibição. **Quem calcula de verdade é o `venda-service`**,
-que é quem consulta o preço em Produtos. O frontend nunca decide preço.
+O `relatorio-service` guarda uma cópia dos dados de Produtos, Estoque e
+Vendas, atualizada pelo botão **Sincronizar dados**
+(`POST /relatorios/sincronizar`). As rotas de leitura devolvem listas
+simples; os indicadores (faturamento, ticket médio, estoque baixo) e o filtro
+por período do relatório de vendas são feitos na tela, só para exibição. O
+relatório de estoque só traz o `produtoId`, então a tela busca os nomes no
+`produto-service`, do mesmo jeito que a aba Estoque.
 
 ### Detalhe da tela de Estoque
 
@@ -103,9 +112,11 @@ js/auth.js     -> login e sessão
 js/produtos.js -> tela de produtos
 js/estoque.js  -> tela de estoque
 js/pagamentos.js -> tela de pagamentos
-js/vendas.js    -> tela de vendas (carrinho e pagamento)
+js/vendas.js    -> tela de vendas (venda em andamento e pagamento)
 js/relatorios.js -> tela de relatorios
 js/app.js      -> navegação entre abas
+img/icones.svg -> ícones da interface (sprite SVG, desenhado para o projeto)
+img/logo.svg   -> logo, usado também como favicon
 ```
 
 Nenhum arquivo de tela chama `fetch` direto: tudo passa pelo `js/api.js`.
@@ -118,7 +129,8 @@ O `js/api.js` entende os dois formatos de erro que os serviços usam:
 
 | Serviço | Formato |
 |---|---|
-| produtos, estoque | `{ "status": 400, "erro": "...", "campos": { ... } }` |
+| produtos, estoque, vendas | `{ "status": 400, "erro": "...", "campos": { ... } }` |
+| pagamentos, relatórios | `{ "erro": "..." }` |
 | usuários (FastAPI) | `{ "detail": "..." }` |
 
 Serviço fora do ar vira a mensagem *"Não foi possível falar com o servidor"*

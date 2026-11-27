@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Logo do Sistema de Farmacia: capsula sobre o verde da interface. -->
+  <rect width="64" height="64" rx="14" fill="#1f7a4d"/>
+  <g transform="rotate(-45 32 32)">
+    <path d="M32 22H22a10 10 0 0 0 0 20h10z" fill="#ffffff"/>
+    <path d="M32 22h10a10 10 0 0 1 0 20H32z" fill="#9fd8b9"/>
+  </g>
+</svg>

@@ -1,4 +1,4 @@
-# 💊 Sistema de Farmácia — Arquitetura de Microsserviços
+# <img src="frontend/img/logo.svg" alt="" width="32" align="top"> Sistema de Farmácia — Arquitetura de Microsserviços
 
 Sistema de gerenciamento para farmácia dividido em **6 microsserviços
 independentes**, cada um com seu próprio banco de dados, comunicando-se apenas
@@ -11,8 +11,8 @@ por **HTTP/REST com JSON**.
 | Integrante | Linguagem  | Serviços                                | Portas       |
 |------------|------------|-----------------------------------------|--------------|
 | Giovana    | Java       | `produto-service`, `estoque-service`    | 8002, 8003   |
-| Guilherme  | Python     | `usuario-service`, `venda-service`      | 8001, —      |
-| Sophia     | JavaScript | `pagamento-service`, `relatorio-service`| 8005, 8006—      |
+| Guilherme  | Python     | `usuario-service`, `venda-service`      | 8001, 8004   |
+| Sophia     | JavaScript | `pagamento-service`, `relatorio-service`| 8005, 8006   |
 
 ## Regra principal da arquitetura
 
@@ -57,6 +57,8 @@ Depois acesse a interface em **http://localhost:8080**.
 | `produto-service`   | http://localhost:8002   | MySQL `localhost:3307`   |
 | `estoque-service`   | http://localhost:8003   | MySQL `localhost:3308`   |
 | `pagamento-service` | http://localhost:8005   | SQLite (volume)          |
+| `venda-service`     | http://localhost:8004   | Postgres `localhost:5437`|
+| `relatorio-service` | http://localhost:8006   | SQLite (volume)          |
 
 Para subir só uma parte: `docker compose up --build produto-service estoque-service`.
 
@@ -108,11 +110,9 @@ também funciona como proxy reverso: o navegador fala só com
 dono do dado. Assim não há CORS e o frontend não precisa conhecer a porta de
 nenhum serviço.
 
-**Todas as seis telas estão implementadas**: login, produtos, estoque, vendas,
-pagamentos e relatórios. As de Vendas e Relatórios foram escritas contra o
-contrato de [`CONTRATOS.md`](CONTRATOS.md); enquanto os serviços não existem,
-elas mostram um aviso em vez de quebrar. Ligá-las depois é trocar dois blocos
-no `nginx.conf` — nenhuma linha de JavaScript muda.
+**Todas as seis telas estão implementadas e ligadas aos serviços**: login,
+produtos, estoque, vendas, pagamentos e relatórios. Detalhes de cada tela em
+[`frontend/README.md`](frontend/README.md).
 
 ## Diagrama de classes
 

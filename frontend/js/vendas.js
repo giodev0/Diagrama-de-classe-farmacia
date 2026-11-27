@@ -1,12 +1,15 @@
 /**
  * Tela de Vendas: consome o venda-service.
  *
- * Segue o contrato de CONTRATOS.md. Enquanto o serviço não existe, a tela
- * mostra um aviso em vez de quebrar — ver `mostrarIndisponivel`.
+ * A venda é montada no servidor, passo a passo:
+ *   1. POST /vendas                  cria a venda ABERTA, vazia
+ *   2. POST /vendas/{id}/itens       adiciona itens (o serviço busca o preço
+ *                                    em Produtos e confere o Estoque)
+ *   3. PUT  /vendas/{id}/desconto    aplica o desconto
+ *   4. POST /vendas/{id}/finalizar   paga; só então o estoque é baixado
  *
- * A venda acontece em duas etapas, de propósito:
- *   1. monta o carrinho e cria a venda como RASCUNHO (nada sai do estoque)
- *   2. paga, e só então o estoque é reduzido
+ * A tela nunca calcula preço nem total: ela só desenha a venda que o
+ * venda-service devolve a cada passo.
  */
 const Vendas = (() => {
 
@@ -16,20 +19,25 @@ const Vendas = (() => {
     { valor: 'DINHEIRO', rotulo: 'Dinheiro' },
   ];
 
-  /** Itens do carrinho da venda que está sendo montada. */
-  let carrinho = [];
+  const ETIQUETAS = {
+    ABERTA: 'alerta',
+    FINALIZADA: 'ok',
+    CANCELADA: 'erro',
+  };
 
-  const secao = () => document.getElementById('secao-vendas');
+  /** Recarregar a página não deve perder a venda que estava no caixa. */
+  const CHAVE_VENDA_ATUAL = 'farmacia.vendaAtual';
+
+  /** A venda ABERTA que está sendo montada, como o servidor devolveu. */
+  let vendaAtual = null;
+
   const tabela = () => document.getElementById('tabela-vendas');
 
   // ---------------- disponibilidade do serviço ----------------
 
-  /**
-   * Enquanto o venda-service não existe, o nginx responde 503 e o frontend
-   * mostra o que falta. Nenhum JavaScript muda quando o serviço entrar no ar.
-   */
+  /** 502/504 vêm do nginx quando o container não responde. */
   function servicoIndisponivel(erro) {
-    return erro.status === 503 || erro.status === 404 || erro.status === 0;
+    return [0, 502, 503, 504].includes(erro.status);
   }
 
   function mostrarIndisponivel() {
@@ -57,86 +65,145 @@ const Vendas = (() => {
         return;
       }
       Ui.avisarErro(erro);
-      Ui.linhaVazia(tabela(), 6, 'Não foi possível carregar as vendas.');
+      Ui.linhaVazia(tabela(), 7, 'Não foi possível carregar as vendas.');
+      return;
     }
-  }
 
-  const ETIQUETAS = {
-    RASCUNHO: 'alerta',
-    FINALIZADA: 'ok',
-    PAGAMENTO_RECUSADO: 'erro',
-    CANCELADA: 'erro',
-  };
+    await retomarVendaAtual();
+  }
 
   function desenhar(vendas) {
     if (!vendas.length) {
-      Ui.linhaVazia(tabela(), 6, 'Nenhuma venda registrada.');
+      Ui.linhaVazia(tabela(), 7, 'Nenhuma venda registrada.');
       return;
     }
 
     tabela().querySelector('tbody').innerHTML = vendas.map((v) => {
-      const rascunho = v.status === 'RASCUNHO';
+      const aberta = v.status === 'ABERTA';
       return `
         <tr>
           <td>${v.id}</td>
-          <td>${Ui.dataHora(v.criadaEm)}</td>
-          <td>${v.itens ? v.itens.length : 0}</td>
+          <td>${Ui.dataHora(v.finalizadaEm || v.criadaEm)}</td>
+          <td>${quantidadeDeUnidades(v)}</td>
           <td>${Ui.moeda(v.valorTotal)}</td>
+          <td>${Ui.texto(rotuloDaForma(v.formaPagamento))}</td>
           <td><span class="etiqueta ${ETIQUETAS[v.status] || 'alerta'}">${Ui.texto(Ui.rotulo(v.status))}</span></td>
           <td class="acoes">
             <button class="botao-linha" data-detalhe="${v.id}">Detalhes</button>
-            ${rascunho ? `<button class="botao-linha" data-pagar="${v.id}">Pagar</button>` : ''}
-            ${rascunho ? `<button class="botao-linha perigo" data-cancelar="${v.id}">Cancelar</button>` : ''}
+            ${aberta ? `<button class="botao-linha" data-continuar="${v.id}">Continuar</button>` : ''}
+            ${aberta ? `<button class="botao-linha perigo" data-cancelar="${v.id}">Cancelar</button>` : ''}
           </td>
         </tr>`;
     }).join('');
   }
 
-  // ---------------- carrinho ----------------
-
-  function totalDoCarrinho() {
-    const bruto = carrinho.reduce((soma, i) => soma + i.preco * i.quantidade, 0);
-    const desconto = Number(document.getElementById('venda-desconto').value) || 0;
-    const valorDesconto = bruto * (desconto / 100);
-    return { bruto, valorDesconto, total: bruto - valorDesconto };
+  function quantidadeDeUnidades(venda) {
+    return (venda.itens || []).reduce((soma, i) => soma + i.quantidade, 0);
   }
 
-  function desenharCarrinho() {
-    const corpo = document.querySelector('#tabela-carrinho tbody');
+  function rotuloDaForma(forma) {
+    return FORMAS.find((f) => f.valor === forma)?.rotulo || '—';
+  }
 
-    if (!carrinho.length) {
+  // ---------------- venda em andamento ----------------
+
+  function definirVendaAtual(venda) {
+    vendaAtual = venda && venda.status === 'ABERTA' ? venda : null;
+
+    if (vendaAtual) {
+      sessionStorage.setItem(CHAVE_VENDA_ATUAL, String(vendaAtual.id));
+    } else {
+      sessionStorage.removeItem(CHAVE_VENDA_ATUAL);
+    }
+    desenharVendaAtual();
+  }
+
+  /** Ao abrir a aba, volta para a venda que estava aberta no caixa. */
+  async function retomarVendaAtual() {
+    const id = vendaAtual?.id || sessionStorage.getItem(CHAVE_VENDA_ATUAL);
+    if (!id) {
+      desenharVendaAtual();
+      return;
+    }
+    try {
+      definirVendaAtual(await Api.buscarVenda(id));
+    } catch {
+      // A venda sumiu ou o serviço caiu: o caixa só volta ao estado vazio.
+      definirVendaAtual(null);
+    }
+  }
+
+  function desenharVendaAtual() {
+    document.getElementById('venda-sem-andamento').hidden = Boolean(vendaAtual);
+    document.getElementById('venda-em-andamento').hidden = !vendaAtual;
+
+    if (!vendaAtual) {
+      return;
+    }
+
+    const v = vendaAtual;
+    document.getElementById('venda-atual-titulo').textContent = `Venda #${v.id}`;
+
+    const corpo = document.querySelector('#tabela-itens-venda tbody');
+    if (!v.itens.length) {
       corpo.innerHTML = '<tr><td class="vazio" colspan="5">Nenhum item adicionado.</td></tr>';
     } else {
-      corpo.innerHTML = carrinho.map((item, indice) => `
+      corpo.innerHTML = v.itens.map((item) => `
         <tr>
-          <td>${Ui.texto(item.nome)}</td>
+          <td>${Ui.texto(item.nomeProduto)}</td>
           <td>${item.quantidade}</td>
-          <td>${Ui.moeda(item.preco)}</td>
-          <td>${Ui.moeda(item.preco * item.quantidade)}</td>
+          <td>${Ui.moeda(item.precoUnitario)}</td>
+          <td>${Ui.moeda(item.subtotal)}</td>
           <td class="acoes">
-            <button class="botao-linha perigo" data-remover="${indice}">Remover</button>
+            <button class="botao-linha perigo" data-remover="${item.id}">Remover</button>
           </td>
         </tr>`).join('');
     }
 
-    const { bruto, valorDesconto, total } = totalDoCarrinho();
-    document.getElementById('venda-bruto').textContent = Ui.moeda(bruto);
-    document.getElementById('venda-valor-desconto').textContent = `- ${Ui.moeda(valorDesconto)}`;
-    document.getElementById('venda-total').textContent = Ui.moeda(total);
-    document.getElementById('finalizar-venda').disabled = carrinho.length === 0;
+    document.getElementById('venda-desconto').value = v.descontoPercentual;
+    document.getElementById('venda-subtotal').textContent = Ui.moeda(v.subtotal);
+    document.getElementById('venda-valor-desconto').textContent = `- ${Ui.moeda(v.valorDesconto)}`;
+    document.getElementById('venda-total').textContent = Ui.moeda(v.valorTotal);
+    document.getElementById('finalizar-venda').disabled = v.itens.length === 0;
+  }
+
+  async function novaVenda() {
+    try {
+      definirVendaAtual(await Api.criarVenda());
+      await carregarLista();
+      abrirAdicaoDeItem();
+    } catch (erro) {
+      Ui.avisarErro(erro);
+    }
+  }
+
+  /** Recarrega só a tabela, sem mexer na venda em andamento. */
+  async function carregarLista() {
+    try {
+      desenhar(await Api.listarVendas({
+        status: document.getElementById('filtro-status-venda').value,
+      }));
+    } catch (erro) {
+      Ui.avisarErro(erro);
+    }
   }
 
   async function abrirAdicaoDeItem() {
-    await Produtos.carregar();
-    const produtos = Produtos.carregados();
+    let produtos;
+    try {
+      produtos = await Api.listarProdutos();
+    } catch (erro) {
+      Ui.avisarErro(erro);
+      return;
+    }
 
     if (!produtos.length) {
-      Ui.avisar('Cadastre um produto antes de iniciar uma venda.', 'erro');
+      Ui.avisar('Cadastre um produto antes de vender.', 'erro');
       return;
     }
 
     Ui.abrirFormulario({
-      titulo: 'Adicionar item',
+      titulo: `Adicionar item à venda #${vendaAtual.id}`,
       campos: [
         {
           nome: 'produtoId', rotulo: 'Produto', tipo: 'select',
@@ -144,81 +211,91 @@ const Vendas = (() => {
             valor: p.id, rotulo: `${p.nome} — ${Ui.moeda(p.preco)}`,
           })),
         },
-        { nome: 'quantidade', rotulo: 'Quantidade', tipo: 'number', min: '1', valor: 1 },
+        {
+          nome: 'quantidade', rotulo: 'Quantidade', tipo: 'number', min: '1', valor: 1,
+          ajuda: 'O venda-service confere no Estoque se há unidades suficientes.',
+        },
       ],
-      aoSalvar: (valores) => {
-        const produto = produtos.find((p) => String(p.id) === String(valores.produtoId));
-        const quantidade = Number(valores.quantidade);
-
-        // Mesmo produto duas vezes vira uma linha só, com a soma.
-        const existente = carrinho.find((i) => i.produtoId === produto.id);
-        if (existente) {
-          existente.quantidade += quantidade;
-        } else {
-          carrinho.push({
-            produtoId: produto.id,
-            nome: produto.nome,
-            preco: Number(produto.preco),
-            quantidade,
-          });
-        }
-        desenharCarrinho();
+      aoSalvar: async (valores) => {
+        const venda = await Api.adicionarItem(
+          vendaAtual.id, Number(valores.produtoId), Number(valores.quantidade),
+        );
+        definirVendaAtual(venda);
+        await carregarLista();
       },
     });
   }
 
-  function limparCarrinho() {
-    carrinho = [];
-    document.getElementById('venda-desconto').value = 0;
-    desenharCarrinho();
-  }
-
-  async function criarVenda() {
-    const usuario = Api.usuarioLogado();
-
+  async function removerItem(itemId) {
     try {
-      const venda = await Api.criarVenda({
-        funcionarioId: usuario?.id ?? 1,
-        descontoPercentual: Number(document.getElementById('venda-desconto').value) || 0,
-        itens: carrinho.map((i) => ({ produtoId: i.produtoId, quantidade: i.quantidade })),
-      });
-
-      Ui.avisar(`Venda #${venda.id} criada. Agora é só receber o pagamento.`);
-      limparCarrinho();
-      await carregar();
-      abrirPagamento(venda.id, venda.valorTotal);
+      definirVendaAtual(await Api.removerItem(vendaAtual.id, itemId));
+      await carregarLista();
     } catch (erro) {
       Ui.avisarErro(erro);
     }
   }
 
-  // ---------------- pagamento ----------------
+  async function aplicarDesconto() {
+    const campo = document.getElementById('venda-desconto');
+    try {
+      definirVendaAtual(await Api.aplicarDesconto(vendaAtual.id, Number(campo.value) || 0));
+      await carregarLista();
+    } catch (erro) {
+      Ui.avisarErro(erro);
+      // Volta o campo para o desconto que de fato está valendo.
+      campo.value = vendaAtual.descontoPercentual;
+    }
+  }
 
-  function abrirPagamento(vendaId, valorTotal) {
+  function abrirPagamento() {
+    const venda = vendaAtual;
+
     Ui.abrirFormulario({
-      titulo: `Pagamento da venda #${vendaId}`,
+      titulo: `Pagamento da venda #${venda.id}`,
       campos: [
         {
-          nome: 'valor', rotulo: 'Valor a receber', valor: Ui.moeda(valorTotal ?? 0),
+          nome: 'valor', rotulo: 'Valor a receber', valor: Ui.moeda(venda.valorTotal),
           somenteLeitura: true, obrigatorio: false,
         },
         { nome: 'formaPagamento', rotulo: 'Forma de pagamento', tipo: 'select', opcoes: FORMAS },
       ],
+      // Pagamento recusado ou estoque insuficiente voltam como erro: o modal
+      // continua aberto e a venda segue ABERTA para tentar de novo.
       aoSalvar: async (valores) => {
-        const venda = await Api.pagarVenda(vendaId, valores.formaPagamento);
-
-        // Pagamento recusado volta 200 com o status no corpo: nao e erro de
-        // requisicao, e resultado de negocio.
-        if (venda.status === 'FINALIZADA') {
-          Ui.avisar(`Venda #${vendaId} finalizada. Estoque baixado.`);
-        } else {
-          Ui.avisar(`Pagamento recusado. A venda #${vendaId} segue em aberto.`, 'erro');
-        }
-
-        await carregar();
+        await Api.finalizarVenda(venda.id, valores.formaPagamento);
+        Ui.avisar(`Venda #${venda.id} finalizada. Estoque baixado.`);
+        definirVendaAtual(null);
+        await carregarLista();
       },
     });
   }
+
+  async function continuar(id) {
+    try {
+      definirVendaAtual(await Api.buscarVenda(id));
+      document.getElementById('secao-vendas').scrollIntoView({ behavior: 'smooth' });
+    } catch (erro) {
+      Ui.avisarErro(erro);
+    }
+  }
+
+  async function cancelar(id) {
+    if (!confirm(`Cancelar a venda #${id}?`)) {
+      return;
+    }
+    try {
+      await Api.cancelarVenda(id);
+      Ui.avisar(`Venda #${id} cancelada.`);
+      if (String(vendaAtual?.id) === String(id)) {
+        definirVendaAtual(null);
+      }
+      await carregarLista();
+    } catch (erro) {
+      Ui.avisarErro(erro);
+    }
+  }
+
+  // ---------------- detalhe ----------------
 
   async function mostrarDetalhe(id) {
     try {
@@ -244,10 +321,13 @@ const Vendas = (() => {
             </table>
           </div>
           <div class="resumo-venda">
-            <div><span>Bruto</span><strong>${Ui.moeda(venda.valorBruto)}</strong></div>
-            <div><span>Desconto (${venda.descontoPercentual ?? 0}%)</span><strong>- ${Ui.moeda(venda.valorDesconto)}</strong></div>
+            <div><span>Subtotal</span><strong>${Ui.moeda(venda.subtotal)}</strong></div>
+            <div><span>Desconto (${venda.descontoPercentual}%)</span><strong>- ${Ui.moeda(venda.valorDesconto)}</strong></div>
             <div class="destaque"><span>Total</span><strong>${Ui.moeda(venda.valorTotal)}</strong></div>
             <div><span>Situação</span><strong>${Ui.texto(Ui.rotulo(venda.status))}</strong></div>
+            <div><span>Criada em</span><strong>${Ui.dataHora(venda.criadaEm)}</strong></div>
+            ${venda.finalizadaEm ? `<div><span>Finalizada em</span><strong>${Ui.dataHora(venda.finalizadaEm)}</strong></div>` : ''}
+            ${venda.formaPagamento ? `<div><span>Forma</span><strong>${Ui.texto(rotuloDaForma(venda.formaPagamento))}</strong></div>` : ''}
             ${venda.pagamentoId ? `<div><span>Pagamento</span><strong>#${venda.pagamentoId}</strong></div>` : ''}
           </div>`,
       });
@@ -256,33 +336,27 @@ const Vendas = (() => {
     }
   }
 
-  async function cancelar(id) {
-    if (!confirm(`Cancelar a venda #${id}?`)) {
-      return;
-    }
-    try {
-      await Api.cancelarVenda(id);
-      Ui.avisar(`Venda #${id} cancelada.`);
-      await carregar();
-    } catch (erro) {
-      Ui.avisarErro(erro);
-    }
-  }
-
   // ---------------- ligação com a tela ----------------
 
   function iniciar() {
+    document.getElementById('nova-venda').addEventListener('click', novaVenda);
     document.getElementById('adicionar-item').addEventListener('click', abrirAdicaoDeItem);
-    document.getElementById('limpar-venda').addEventListener('click', limparCarrinho);
-    document.getElementById('finalizar-venda').addEventListener('click', criarVenda);
-    document.getElementById('venda-desconto').addEventListener('input', desenharCarrinho);
-    document.getElementById('filtro-status-venda').addEventListener('change', carregar);
+    document.getElementById('aplicar-desconto').addEventListener('click', aplicarDesconto);
+    document.getElementById('finalizar-venda').addEventListener('click', abrirPagamento);
+    document.getElementById('cancelar-venda-atual').addEventListener('click', () => cancelar(vendaAtual.id));
+    document.getElementById('fechar-venda-atual').addEventListener('click', () => definirVendaAtual(null));
+    document.getElementById('filtro-status-venda').addEventListener('change', carregarLista);
 
-    document.querySelector('#tabela-carrinho tbody').addEventListener('click', (evento) => {
-      const indice = evento.target.dataset.remover;
-      if (indice !== undefined) {
-        carrinho.splice(Number(indice), 1);
-        desenharCarrinho();
+    document.getElementById('venda-desconto').addEventListener('keydown', (evento) => {
+      if (evento.key === 'Enter') {
+        aplicarDesconto();
+      }
+    });
+
+    document.querySelector('#tabela-itens-venda tbody').addEventListener('click', (evento) => {
+      const itemId = evento.target.dataset.remover;
+      if (itemId) {
+        removerItem(itemId);
       }
     });
 
@@ -291,15 +365,15 @@ const Vendas = (() => {
       if (dados.detalhe) {
         mostrarDetalhe(dados.detalhe);
       }
-      if (dados.pagar) {
-        abrirPagamento(dados.pagar);
+      if (dados.continuar) {
+        continuar(dados.continuar);
       }
       if (dados.cancelar) {
         cancelar(dados.cancelar);
       }
     });
 
-    desenharCarrinho();
+    desenharVendaAtual();
   }
 
   return { iniciar, carregar };

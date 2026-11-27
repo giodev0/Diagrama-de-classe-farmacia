@@ -134,6 +134,8 @@ services:
       - produto-service
       - estoque-service
       - pagamento-service
+      - venda-service
+      - relatorio-service
   postgres-venda:
     container_name: postgres-venda
     image: postgres:16
@@ -160,9 +162,12 @@ services:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres-venda:5432/venda_db
       JWT_SECRET: ${JWT_SECRET}
       PRODUTO_URL: http://produto-service:8002
-      ESTOQUE_URL: http://produto-service:8003
-      PAGAMENTO_URL: http://produto-service:8005
+      ESTOQUE_URL: http://estoque-service:8003
+      PAGAMENTO_URL: http://pagamento-service:8005
       USAR_MOCKS: "false"
+      # Mesmo fuso do postgres-venda: criadaEm vem do banco e finalizadaEm do
+      # datetime.now() do Python. Sem isto as duas ficam 3h de diferenca.
+      TZ: America/Fortaleza
     depends_on:
       postgres-venda:
         condition: service_healthy

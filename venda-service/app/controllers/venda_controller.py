@@ -34,7 +34,7 @@ def get_venda_service(db: Session = Depends(get_db), usuario_logado: dict = Depe
 def criar(usuario_logado: dict = Depends(get_usuario_atual), service: VendaService = Depends(get_venda_service)):
     return service.criar_venda(usuario_logado)
 
-@router.get("", response_model=VendaResponse)
+@router.get("", response_model=list[VendaResponse])
 def listar(inicio: Optional[date] = Query(default=None), fim: Optional[date] = Query(default=None), status_venda: Optional[StatusVenda] = Query(default=None, alias="status"), service: VendaService = Depends(get_venda_service)):
     return service.listar_vendas(inicio, fim, status_venda)
 

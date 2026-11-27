@@ -50,7 +50,7 @@ const Api = (() => {
 
   /**
    * Extrai a mensagem de erro das duas formas que os servicos usam:
-   * - produtos e estoque: { erro, campos }
+   * - produtos, estoque, vendas, pagamentos e relatorios: { erro, campos }
    * - usuarios (FastAPI):  { detail }
    */
   function mensagemDeErro(corpo, status) {
@@ -169,20 +169,31 @@ const Api = (() => {
     processarPagamento: (dados) => requisitar(CAMINHOS.pagamentos, { metodo: 'POST', corpo: dados }),
 
     // ---- vendas (venda-service) ----
+    // A venda nasce vazia (o funcionario vem do token) e e montada no
+    // servidor, item a item. Precos e totais sao sempre calculados la.
     listarVendas: (filtros) => requisitar(comParametros(CAMINHOS.vendas, filtros)),
     buscarVenda: (id) => requisitar(`${CAMINHOS.vendas}/${id}`),
-    criarVenda: (dados) => requisitar(CAMINHOS.vendas, { metodo: 'POST', corpo: dados }),
-    pagarVenda: (id, formaPagamento) =>
-      requisitar(`${CAMINHOS.vendas}/${id}/pagamento`, {
+    criarVenda: () => requisitar(CAMINHOS.vendas, { metodo: 'POST' }),
+    adicionarItem: (id, produtoId, quantidade) =>
+      requisitar(`${CAMINHOS.vendas}/${id}/itens`, {
+        metodo: 'POST', corpo: { produtoId, quantidade },
+      }),
+    removerItem: (id, itemId) =>
+      requisitar(`${CAMINHOS.vendas}/${id}/itens/${itemId}`, { metodo: 'DELETE' }),
+    aplicarDesconto: (id, descontoPercentual) =>
+      requisitar(`${CAMINHOS.vendas}/${id}/desconto`, {
+        metodo: 'PUT', corpo: { descontoPercentual },
+      }),
+    finalizarVenda: (id, formaPagamento) =>
+      requisitar(`${CAMINHOS.vendas}/${id}/finalizar`, {
         metodo: 'POST', corpo: { formaPagamento },
       }),
-    cancelarVenda: (id) => requisitar(`${CAMINHOS.vendas}/${id}/cancelar`, { metodo: 'POST' }),
+    cancelarVenda: (id) => requisitar(`${CAMINHOS.vendas}/${id}/cancelar`, { metodo: 'PUT' }),
 
     // ---- relatorios (relatorio-service) ----
     sincronizarRelatorios: () =>
       requisitar(`${CAMINHOS.relatorios}/sincronizar`, { metodo: 'POST' }),
-    relatorioDeVendas: (periodo) =>
-      requisitar(comParametros(`${CAMINHOS.relatorios}/vendas`, periodo)),
+    relatorioDeVendas: () => requisitar(`${CAMINHOS.relatorios}/vendas`),
     relatorioDeProdutos: () => requisitar(`${CAMINHOS.relatorios}/produtos`),
     relatorioDeEstoque: () => requisitar(`${CAMINHOS.relatorios}/estoque`),
   };

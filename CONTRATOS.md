@@ -129,7 +129,7 @@ Demais rotas exigem `Authorization: Bearer <token>`.
 
 ## estoque-service — `8003`
 
-> ⚠️ **Atenção:** este serviço usa `/estoque` no **singular**, diferente dos
+> **Atenção:** este serviço usa `/estoque` no **singular**, diferente dos
 > demais. A chave da URL é o **`produtoId`**, não o id do registro de estoque.
 
 | Método | Rota | Descrição |

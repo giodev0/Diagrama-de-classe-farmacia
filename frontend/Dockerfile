@@ -8,5 +8,6 @@ COPY proxy-comum.inc /etc/nginx/conf.d/proxy-comum.inc
 COPY index.html /usr/share/nginx/html/
 COPY css /usr/share/nginx/html/css
 COPY js /usr/share/nginx/html/js
+COPY img /usr/share/nginx/html/img
 
 EXPOSE 80
