@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -27,8 +27,8 @@ def excluir(id: int, usuario_logado: dict = Depends(exigir_admin), service: Usua
     service.excluir_usuario(id, usuario_logado)
 
 @router.get("/usuarios", response_model=list[UsuarioResponse], dependencies=[Depends(get_usuario_atual)])
-def listar(service: UsuarioService = Depends(get_usuario_service)):
-    return service.listar_usuarios()
+def listar(incluir_inativos: bool = Query(default=False, alias= "incluirInativos"), service: UsuarioService = Depends(get_usuario_service)):
+    return service.listar_usuarios(incluir_inativos)
 
 @router.get("/usuarios/{id}", response_model=UsuarioResponse, dependencies=[Depends(get_usuario_atual)])
 def buscar(id: int, service: UsuarioService = Depends(get_usuario_service)):
@@ -37,3 +37,7 @@ def buscar(id: int, service: UsuarioService = Depends(get_usuario_service)):
 @router.put("/usuarios/{id}", response_model=UsuarioResponse, dependencies=[Depends(get_usuario_atual)])
 def editar(id: int, dados: UsuarioUpdate, usuario_logado: dict = Depends(get_usuario_atual), service: UsuarioService = Depends(get_usuario_service)):
     return service.editar_usuario(id, dados, usuario_logado)
+
+@router.put("/usuarios/{id}/reativar", response_model=UsuarioResponse, dependencies=[Depends(exigir_admin)])
+def reativar(id: int, service: UsuarioService = Depends(get_usuario_service)):
+    return service.reativar_usuario(id)

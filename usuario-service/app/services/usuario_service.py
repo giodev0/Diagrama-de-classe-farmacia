@@ -10,7 +10,11 @@ class UsuarioService:
         self.repo = repo
 
     def cadastrar_usuario(self, dados: UsuarioCreate) -> Usuario:
-        if self.repo.buscar_por_email(dados.email):
+        existente = self.repo.buscar_por_email(dados.email) 
+        if existente:
+            if not existente.ativo:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Este email pertence a um usuário desativado (id {existente.id}). Reative a conta em vez de cadastrar de novo")
+            
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Email já cadastrado")
 
         usuario = Usuario(
@@ -25,10 +29,22 @@ class UsuarioService:
         usuario = self.repo.buscar_por_id(id)
         if not usuario or not usuario.ativo:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Usuário não encontrado")
+        
         return usuario
 
-    def listar_usuarios(self) -> list[Usuario]:
-        return self.repo.listar()
+    def listar_usuarios(self, incluir_inativos: bool = False) -> list[Usuario]:
+        return self.repo.listar(apenas_ativos=not incluir_inativos)
+
+    def reativar_usuario(self, id: int) -> Usuario:
+        usuario = self.repo.buscar_por_id(id)
+        if not usuario:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Usuário não encontrado")
+        
+        if usuario.ativo:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "O usuário já está ativo")
+        
+        usuario.ativo = True
+        return self.repo.salvar(usuario) 
 
     def editar_usuario(self, id: int, dados: UsuarioUpdate, usuario_logado: dict) -> Usuario:
         if usuario_logado["id"] != id and usuario_logado["tipo"] != "ADMIN":
