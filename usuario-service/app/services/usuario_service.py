@@ -31,6 +31,12 @@ class UsuarioService:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Usuário não encontrado")
         
         return usuario
+    
+    def buscar_usuario_visivel(self, id: int, usuario_logado: dict) -> Usuario:
+        if usuario_logado["id"] != id and usuario_logado["tipo"] != "ADMIN":
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Sem permissão para ver este usuário")
+        
+        return self.buscar_usuario(id)
 
     def listar_usuarios(self, incluir_inativos: bool = False) -> list[Usuario]:
         return self.repo.listar(apenas_ativos=not incluir_inativos)

@@ -26,13 +26,17 @@ def cadastrar(dados: UsuarioCreate, service: UsuarioService = Depends(get_usuari
 def excluir(id: int, usuario_logado: dict = Depends(exigir_admin), service: UsuarioService = Depends(get_usuario_service)):
     service.excluir_usuario(id, usuario_logado)
 
-@router.get("/usuarios", response_model=list[UsuarioResponse], dependencies=[Depends(get_usuario_atual)])
+@router.get("/usuarios", response_model=list[UsuarioResponse], dependencies=[Depends(exigir_admin)])
 def listar(incluir_inativos: bool = Query(default=False, alias= "incluirInativos"), service: UsuarioService = Depends(get_usuario_service)):
     return service.listar_usuarios(incluir_inativos)
 
+@router.get("/usuarios/me", response_model=UsuarioResponse)
+def meus_dados(usuario_logado: dict = Depends(get_usuario_atual), service: UsuarioService = Depends(get_usuario_service)):
+    return service.buscar_usuario(usuario_logado["id"])
+
 @router.get("/usuarios/{id}", response_model=UsuarioResponse, dependencies=[Depends(get_usuario_atual)])
-def buscar(id: int, service: UsuarioService = Depends(get_usuario_service)):
-    return service.buscar_usuario(id)
+def buscar(id: int, usuario_logado: dict = Depends(get_usuario_atual), service: UsuarioService = Depends(get_usuario_service)):
+    return service.buscar_usuario_visivel(id, usuario_logado)
 
 @router.put("/usuarios/{id}", response_model=UsuarioResponse, dependencies=[Depends(get_usuario_atual)])
 def editar(id: int, dados: UsuarioUpdate, usuario_logado: dict = Depends(get_usuario_atual), service: UsuarioService = Depends(get_usuario_service)):
