@@ -13,11 +13,27 @@ class RelatorioService {
     this.repository = repository;
   }
 
-  async buscarDados(url, nomeServico) {
+  async buscarDados(
+    url,
+    nomeServico,
+    autorizacao = null
+  ) {
+
     try {
 
+      const configuracao = {};
+
+      if (autorizacao) {
+        configuracao.headers = {
+          Authorization: autorizacao
+        };
+      }
+
       const resposta =
-        await axios.get(url);
+        await axios.get(
+          url,
+          configuracao
+        );
 
       return {
         disponivel: true,
@@ -38,7 +54,7 @@ class RelatorioService {
     }
   }
 
-  async sincronizar() {
+  async sincronizar(autorizacao) {
 
     const [
       resultadoProdutos,
@@ -58,13 +74,15 @@ class RelatorioService {
 
       this.buscarDados(
         `${config.vendaServiceUrl}/vendas`,
-        "venda-service"
+        "venda-service",
+        autorizacao
       )
     ]);
 
     try {
 
       if (resultadoEstoque.disponivel) {
+
         await this.sincronizarEstoque(
           resultadoEstoque.dados
         );

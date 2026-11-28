@@ -8,8 +8,13 @@ async function sincronizar(req, res) {
 
   try {
 
+    const autorizacao =
+      req.headers.authorization;
+
     const resultado =
-      await relatorioService.sincronizar();
+      await relatorioService.sincronizar(
+        autorizacao
+      );
 
     return res.json(resultado);
 
